@@ -6,7 +6,8 @@ mod storage;
 
 use std::time::Instant;
 use std::io::{self, Write};
-
+use ratatui;
+ 
 fn main() {
     println!("[INFO] Запуск генератора энтропии...");
 
@@ -44,7 +45,7 @@ fn main() {
     let cypher_data = encryption::encrypt(data.trim().as_bytes(), &password_hash).expect("[ERROR] Ошибка шифрования данных");
     println!("Зашифрованый вектор с nonce и прочим: {:?}", cypher_data);
     let decrypted_bytes = encryption::decrypt(&cypher_data, &password_hash).expect("[ERROR] Ошибка дешифровки данных");
-    let decrypted_data = String::from_utf8(decrypted_bytes).map_err(|e| format!("Ошибка кодировки UTF-8: {}", e));
+    let decrypted_data = String::from_utf8(decrypted_bytes).map_err(|e| format!("Ошибка кодировки UTF-8: {}", e)).expect("[ERROR] Ошибка чтения данных");
     println!("Расшифрованные данные: {:?}", decrypted_data);
 
     println!("Сгенерированный пароль: {}", generator::generate_password(26, true, true, true));
