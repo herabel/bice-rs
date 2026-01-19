@@ -7,7 +7,8 @@ mod storage;
 use std::time::Instant;
 use std::io::{self, Write};
 use ratatui;
- 
+
+// TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
 fn main() {
     println!("[INFO] Запуск генератора энтропии...");
 
@@ -26,7 +27,7 @@ fn main() {
     io::stdin().read_line(&mut input).expect("[ERROR] Не получилось получить строку");
 
     let start_vault = Instant::now();
-    let password_hash = vault::get_master_key(&input.trim(), &entropy_data).expect("Не удалось сгенерировать мастер-ключ");
+    let password_hash = vault::get_master_key(&input.trim(), &entropy_data, vault::SecurityProfile::Paranoid).expect("Не удалось сгенерировать мастер-ключ");
     let duration_vault = start_vault.elapsed();
 
     println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);

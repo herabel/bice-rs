@@ -1,7 +1,7 @@
 use getrandom;
 use rdrand::{self, RdRand, RdSeed};
 use tiny_keccak::{Hasher, Shake, Xof};
-
+// TODO: Общий реворк модуля в соответствии с NIST SP800-90C (https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90C.pdf)
 pub fn generate_512_bit_entropy() -> [u8; 64] {
     /*let hardw_gen_rdrand = RdRand::new().expect("Процессор не поддерживает RdRand");
     let hardw_gen_rdseed = RdSeed::new().expect("Процессор не поддерживает RdSeed");*/
