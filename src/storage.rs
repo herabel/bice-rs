@@ -31,5 +31,5 @@ pub fn read_bice(path: &str) -> Result<BiceFile, String> {
     let mut encrypted_data = Vec::new();
     buf_reader.read_to_end(&mut encrypted_data).map_err(|e| e.to_string())?;
 
-    Ok(BiceFile { salt, encrypted_data})
+    Ok(BiceFile {salt, encrypted_data})
 }

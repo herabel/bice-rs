@@ -15,14 +15,26 @@ pub fn generate_password(length: usize, use_uppercase: bool, use_digits: bool, u
     let chars: Vec<char> = charset.chars().collect();
     let chars_len = chars.len();
 
+    let threshold = (256 / chars_len) * chars_len;
+
     let mut password = String::with_capacity(length);
 
-    for _ in 1..length {
-        let rand_byte = entropy::generate_random_bytes(1)[0];
-        let index = (rand_byte as usize) % chars_len;
-        let symbol = chars[index];
-        password.push(symbol);
+    while password.len() < length {
+        let rand_byte_buf = entropy::generate_random_bytes(length);
+        for byte in rand_byte_buf {
+            if password.len() == length {
+                break;
+            }
+            let value = byte as usize;
+            
+            if value >= threshold{
+                println!("[DEBUG] Произошёл отсев байта {} ({:02X})", value, value);
+                continue;
+            }
+            
+            let index = value % chars_len;
+            password.push(chars[index]);
+        }
     }
-
     password
 }

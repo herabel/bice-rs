@@ -4,9 +4,13 @@ mod vault;
 mod generator;
 mod storage;
 
+use std::path::Path;
 use std::time::Instant;
 use std::io::{self, Write};
 
+use crate::vault::get_master_key;
+
+// TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
 fn main() {
     println!("[INFO] Запуск генератора энтропии...");
 
@@ -25,7 +29,7 @@ fn main() {
     io::stdin().read_line(&mut input).expect("[ERROR] Не получилось получить строку");
 
     let start_vault = Instant::now();
-    let password_hash = vault::get_master_key(&input.trim(), &entropy_data).expect("Не удалось сгенерировать мастер-ключ");
+    let password_hash = vault::get_master_key(&input.trim(), &entropy_data, vault::SecurityProfile::Paranoid).expect("Не удалось сгенерировать мастер-ключ");
     let duration_vault = start_vault.elapsed();
 
     println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);
@@ -44,7 +48,7 @@ fn main() {
     let cypher_data = encryption::encrypt(data.trim().as_bytes(), &password_hash).expect("[ERROR] Ошибка шифрования данных");
     println!("Зашифрованый вектор с nonce и прочим: {:?}", cypher_data);
     let decrypted_bytes = encryption::decrypt(&cypher_data, &password_hash).expect("[ERROR] Ошибка дешифровки данных");
-    let decrypted_data = String::from_utf8(decrypted_bytes).map_err(|e| format!("Ошибка кодировки UTF-8: {}", e));
+    let decrypted_data = String::from_utf8(decrypted_bytes).map_err(|e| format!("Ошибка кодировки UTF-8: {}", e)).expect("[ERROR] Ошибка чтения данных");
     println!("Расшифрованные данные: {:?}", decrypted_data);
 
     println!("Сгенерированный пароль: {}", generator::generate_password(26, true, true, true));
@@ -53,20 +57,40 @@ fn main() {
 
     println!("\n[INFO] Проверка чтения из файла...");
     
-    match storage::read_bice("B1CE.bice") {
-        Ok(file_content) => {
-            println!("[SUCCESS] Файл успешно прочитан!");
-            println!("Соль из файла (первые 8 байт): {:02x?}", &file_content.salt[..8]);
-            println!("Размер зашифрованных данных: {} байт", file_content.encrypted_data.len());
+    let file_path = "B1CE.bice";
 
-            let decrypted_from_file = encryption::decrypt(&file_content.encrypted_data, &password_hash)
-                .expect("[ERROR] Не удалось расшифровать данные из файла");
-            
-            let final_text = String::from_utf8(decrypted_from_file)
-                .expect("[ERROR] Ошибка кодировки при чтении файла");
+    if Path::new(file_path).exists() {
+        let mut master_key_login = String::new();
+        println!("[INFO] Файл БД найден. Необходим вход.");
+        print!("[LOGIN] Введите пароль: ");
+        let _ = io::stdout().flush();
+        let _ = io::stdin().read_line(&mut master_key_login);
 
-            println!("Данные, восстановленные из файла: {}", final_text);
-        },
-        Err(e) => println!("[ERROR] Не удалось прочитать файл: {}", e),
+        match storage::read_bice(file_path) {
+            Ok(file_content) => {
+                println!("[SUCCESS] Файл успешно прочитан!");
+                println!("Соль из файла (первые 8 байт): {:02x?}", &file_content.salt[..8]);
+                let bice_salt = &file_content.salt;
+                println!("Размер зашифрованных данных: {} байт", file_content.encrypted_data.len());
+                
+                let login_password_hash = get_master_key(&master_key_login.trim(), bice_salt, vault::SecurityProfile::Paranoid).expect("[ERROR] Не удалось сгенерировать мастер-ключ для разблокировки БД.");
+                match encryption::decrypt(&file_content.encrypted_data, &login_password_hash) {
+                    Ok(decrypted_bytes) => {
+                        match String::from_utf8(decrypted_bytes) {
+                            Ok(final_text) => {
+                                println!("Данные, восстановленные из файла: {}", final_text);
+                            }
+                            Err(_) => {
+                                println!("[ERR] Ошибка расшифровки файла, битые данные.")
+                            }
+                        };
+                    },
+                    Err(_) =>{
+                        println!("[DENIED] Неверный пароль. Доступ запрещён.")
+                    }
+                };
+            },
+            Err(e) => println!("[ERROR] Не удалось прочитать файл: {}", e),
+        }
     }
 }
