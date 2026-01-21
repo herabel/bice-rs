@@ -1,5 +1,5 @@
 use argon2::{self, Argon2, Params};
-
+#[allow(unused)]
 pub enum SecurityProfile {
     Fast,
     Standard,
@@ -9,8 +9,8 @@ pub enum SecurityProfile {
 pub fn get_master_key(password: &str, entropy: &[u8; 64], profile: SecurityProfile) -> Result<[u8; 32], String>{
     //стоит задавать m_cost (1 параметр) как желаемое МБ * 1024 => (64 (МБ) * 1024)
     let (m,t,p) = match profile {
-    SecurityProfile::Fast => (64 * 1024, 8, 4),
-    SecurityProfile::Standard => (128 * 1024, 4, 4),
+    SecurityProfile::Fast => (64 * 1024, 6, 4),
+    SecurityProfile::Standard => (128 * 1024, 8, 4),
     SecurityProfile::Paranoid => (512 * 1024, 8, 4),
     SecurityProfile::Extreme => (1024 * 1024, 12, 4),
 };
