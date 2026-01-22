@@ -18,3 +18,4 @@ chacha20poly1305 = "0.10.1"
 clap = { version = "4.5.54", features = ["derive"] }
 secrecy = "0.10.3"
 ratatui = { version = "0.30.0", features = ["all-widgets"] }
+thiserror ={ version = "2.0.18"}
