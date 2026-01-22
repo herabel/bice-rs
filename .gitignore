@@ -1,1 +1,9 @@
-/target
+/target/
+/debug/
+/release/
+
+*.bice
+
+.vscode/
+
+
