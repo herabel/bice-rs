@@ -4,7 +4,6 @@ mod vault;
 mod generator;
 mod storage;
 
-use std::convert::TryInto;
 use std::path::Path;
 use std::time::Instant;
 use std::io::{self, Write};
