@@ -6,7 +6,7 @@ pub struct BiceFile {
     pub encrypted_data: Vec<u8>
 }
 
-pub fn save_bice(path: &str, salt: &[u8; 64], data: &[u8]) -> std::io::Result<()> {
+pub fn save_bice(path: &str, salt: &Vec<u8>, data: &[u8]) -> std::io::Result<()> {
     let mut file = File::create(path)?;
 
     file.write_all(b"B1CE")?;
