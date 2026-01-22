@@ -13,8 +13,7 @@ use crate::vault::get_master_key;
 // TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
 fn main() {
     println!("[INFO] Запуск генератора энтропии...");
-
-    let entropy_data = entropy::generate_512_bit_entropy();
+    let entropy_data = entropy::generate_random_bytes(512);
 
     let hex_output: String = (&entropy_data)
         .iter()
@@ -70,7 +69,7 @@ fn main() {
             Ok(file_content) => {
                 println!("[SUCCESS] Файл успешно прочитан!");
                 println!("Соль из файла (первые 8 байт): {:02x?}", &file_content.salt[..8]);
-                let bice_salt = &file_content.salt;
+                let bice_salt = &file_content.salt.to_vec();
                 println!("Размер зашифрованных данных: {} байт", file_content.encrypted_data.len());
                 
                 let login_password_hash = get_master_key(&master_key_login.trim(), bice_salt, vault::SecurityProfile::Paranoid).expect("[ERROR] Не удалось сгенерировать мастер-ключ для разблокировки БД.");
