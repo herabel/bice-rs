@@ -1,18 +1,42 @@
-use std::fs::File;
-use std::io::{BufReader, Read, Write};
-
-pub struct BiceFile {
+// TODO: Рефакторинг, модуль должен получать все данные для шифрования и работать по принципу чёрного ящика, чтобы разгрузить логику main.rs
+// main.rs не должен выступать оркестратором данных, это снижает поддержку и излишне усложняет код
+#[allow(unused)]
+pub struct BiceFile{
+    pub header: [u8;4],
+    pub version: u8,
     pub salt: [u8;64],
-    pub encrypted_data: Vec<u8>
+    pub data: Vec<u8>
 }
 
-pub fn save_bice(path: &str, salt: &Vec<u8>, data: &[u8]) -> std::io::Result<()> {
-    let mut file = File::create(path)?;
+impl BiceFile{
+    pub fn new(salt: &Vec<u8>, encrypted_data: &[u8]) -> Self {
+        let mut salt_array = [0u8; 64];
+        salt_array.copy_from_slice(salt);
+        Self {
+            header: *b"B1CE",
+            version: 1,
+            salt: salt_array,
+            data: encrypted_data.to_vec()
+        }
+    }
+}
 
+// deprecated
+
+/*
+#[allow(unused)]
+pub fn create_bice (path: &str, salt: &Vec<u8>) -> std::io::Result<()> {
+    let mut file = OpenOptions::new().create(true).read(true).write(true).open(path).expect("[ERROR] Создание файла (create_bice) неудачно.");
     file.write_all(b"B1CE")?;
     file.write_all(&[1u8])?;
     file.write_all(salt)?;
-    file.write_all(data)?;
+    Ok(())
+}
+
+pub fn save_password_bice(path: &str, password_hashed: &[u8]) -> std::io::Result<()>{
+    let mut file = OpenOptions::new().read(true).write(true).open(path).expect("[ERROR] Не удалось сохранить BICE!");
+    let _ = file.write_all(&password_hashed);
+    file.write(b"0909")?;
     Ok(())
 }
 
@@ -33,3 +57,4 @@ pub fn read_bice(path: &str) -> Result<BiceFile, String> {
 
     Ok(BiceFile {salt, encrypted_data})
 }
+*/
