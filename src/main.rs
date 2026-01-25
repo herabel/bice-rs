@@ -52,12 +52,24 @@ fn main() {
     println!("Расшифрованные данные: {:?}", decrypted_data);
 
     println!("Сгенерированный пароль: {}", generator::generate_password(26, true, true, true));
+    // let _ = storage::save_password_bice("B1CE.bice", vault::get_master_key(&input.trim(), &entropy_data, vault::SecurityProfile::Paranoid).map_err(|e| format!("[ERROR] Ошибка записи в файл: {}", e));
 
-    let _ = storage::save_bice("B1CE.bice", &entropy_data, &cypher_data).map_err(|e| format!("[ERROR] Ошибка записи в файл: {}", e));
+    let master_key_to_save = match vault::get_master_key(input.trim(), &entropy_data, vault::SecurityProfile::Paranoid) {
+        Ok(hash) => {
+            hash
+        },
+        Err(e) => {
+            println!("[ERROR] Не удалось сохранить файл! {}", e);
+            return;
+        }
+    };
+
+    let file_path = "B1CE.bice";
+
+    let _ = storage::save_password_bice(file_path, &master_key_to_save);
 
     println!("\n[INFO] Проверка чтения из файла...");
     
-    let file_path = "B1CE.bice";
 
     if Path::new(file_path).exists() {
         let mut master_key_login = String::new();
