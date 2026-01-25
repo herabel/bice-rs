@@ -775,6 +775,7 @@ dependencies = [
  "ratatui",
  "rdrand",
  "secrecy",
+ "serde",
  "sysinfo",
  "thiserror 2.0.18",
  "tiny-keccak",
