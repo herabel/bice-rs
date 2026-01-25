@@ -4,10 +4,9 @@ mod vault;
 mod generator;
 mod storage;
 
-use std::path::Path;
 use std::time::Instant;
 use std::io::{self, Write};
-
+#[allow(unused)]
 use crate::vault::get_master_key;
 
 // TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
@@ -63,15 +62,16 @@ fn main() {
             return;
         }
     };
-
+    #[allow(unused)]
     let file_path = "B1CE.bice";
-
-    let _ = storage::save_password_bice(file_path, &master_key_to_save);
+    #[allow(unused)]
+    let file = storage::BiceFile::new(&entropy_data, &master_key_to_save);
 
     println!("\n[INFO] Проверка чтения из файла...");
     
+    // deprecated
 
-    if Path::new(file_path).exists() {
+    /*if Path::new(file_path).exists() {
         let mut master_key_login = String::new();
         println!("[INFO] Файл БД найден. Необходим вход.");
         print!("[LOGIN] Введите пароль: ");
@@ -104,5 +104,5 @@ fn main() {
             },
             Err(e) => println!("[ERROR] Не удалось прочитать файл: {}", e),
         }
-    }
+    }*/
 }
