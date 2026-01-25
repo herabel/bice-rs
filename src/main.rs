@@ -11,16 +11,21 @@ use std::io::{self, Write};
 use crate::vault::get_master_key;
 
 // TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
+// TODO 2(в данный момент основное): Рефакторинг, больше инкапсуляции, минимум логики. main.rs должен стать тонкой прослойкой, не более.
 fn main() {
-    println!("[INFO] Запуск генератора энтропии...");
-    let entropy_data = entropy::generate_random_bytes(512);
 
-    let hex_output: String = (&entropy_data)
+    let hex_output = |output_to_hex: &[u8], description: &str| {
+        let output: Vec<_> = (output_to_hex)        
         .iter()
         .map(|b| format!("{:02x}", b))
         .collect();
+        println!("Вывод HEX ({}): {:?}", description, output);
+    };
 
-    println!("Сгенерированная энтропия: {}", hex_output);
+    println!("[INFO] Запуск генератора энтропии...");
+    let entropy_data = entropy::generate_random_bytes(512);
+
+    hex_output(&entropy_data, "данные энтропии");
 
     let mut input = String::new();
     print!("Введите пароль: ");
@@ -33,11 +38,7 @@ fn main() {
 
     println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);
 
-    let hex_output_hash: String = (&password_hash)
-        .iter()
-        .map(|c| format!("{:02x}", c))
-        .collect();
-    println!("{}", hex_output_hash);
+    hex_output(&password_hash, "хэш пароля");
 
     print!("Введите данные: ");
     let _ = io::stdout().flush();
