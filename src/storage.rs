@@ -9,7 +9,7 @@ pub struct BiceFile{
 }
 
 impl BiceFile{
-    pub fn new(salt: &Vec<u8>, encrypted_data: &[u8]) -> Self {
+    pub fn new(salt: &[u8], encrypted_data: &[u8]) -> Self {
         let mut salt_array = [0u8; 64];
         salt_array.copy_from_slice(salt);
         Self {
