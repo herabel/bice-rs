@@ -1,3 +1,5 @@
+use std::{fs::File, io::{BufReader, Read}};
+
 // TODO: Рефакторинг, модуль должен получать все данные для шифрования и работать по принципу чёрного ящика, чтобы разгрузить логику main.rs
 // main.rs не должен выступать оркестратором данных, это снижает поддержку и излишне усложняет код
 #[allow(unused)]
@@ -39,6 +41,7 @@ pub fn save_password_bice(path: &str, password_hashed: &[u8]) -> std::io::Result
     file.write(b"0909")?;
     Ok(())
 }
+*/
 
 pub fn read_bice(path: &str) -> Result<BiceFile, String> {
     let file = File::open(path).map_err(|e| format!("[ERROR] Ошибка открытия файла: {}", e))?;
@@ -55,6 +58,5 @@ pub fn read_bice(path: &str) -> Result<BiceFile, String> {
     let mut encrypted_data = Vec::new();
     buf_reader.read_to_end(&mut encrypted_data).map_err(|e| e.to_string())?;
 
-    Ok(BiceFile {salt, encrypted_data})
+    Ok(BiceFile {salt, data: encrypted_data, header: *b"B1CE", version: 1 })
 }
-*/
