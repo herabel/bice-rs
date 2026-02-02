@@ -22,7 +22,20 @@ fn main() {
     };
 
     println!("[INFO] Запуск генератора энтропии...");
-    let entropy_data = entropy::generate_random_bytes(512);
+
+    let entropy_data: Vec<u8> = match Path::new(file_path).exists() {
+        true => 
+            match storage::read_bice(file_path) {
+                Ok(file_content) => {
+                    file_content.salt.to_vec()
+                },
+                Err(e) => {
+                    println!("[ERROR] Не удалось прочитать файл: {}", e);
+                    panic!();
+                }
+            },
+        false => entropy::generate_random_bytes(64),
+    };
 
     hex_output(&entropy_data, "данные энтропии");
 
