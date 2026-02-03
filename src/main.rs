@@ -4,6 +4,7 @@ mod vault;
 mod generator;
 mod storage;
 
+use std::path::Path;
 use std::time::Instant;
 use std::io::{self, Write};
 #[allow(unused)]
@@ -12,6 +13,9 @@ use crate::vault::get_master_key;
 // TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
 // TODO 2(в данный момент основное): Рефакторинг, больше инкапсуляции, минимум логики. main.rs должен стать тонкой прослойкой, не более.
 fn main() {
+
+    #[allow(unused)]
+    let file_path = "B1CE.bice";
 
     let hex_output = |output_to_hex: &[u8], description: &str| {
         let output: Vec<_> = (output_to_hex)        
@@ -22,7 +26,20 @@ fn main() {
     };
 
     println!("[INFO] Запуск генератора энтропии...");
-    let entropy_data = entropy::generate_random_bytes(512);
+
+    let entropy_data: Vec<u8> = match Path::new(file_path).exists() {
+        true => 
+            match storage::read_bice(file_path) {
+                Ok(file_content) => {
+                    file_content.salt.to_vec()
+                },
+                Err(e) => {
+                    println!("[ERROR] Не удалось прочитать файл: {}", e);
+                    panic!();
+                }
+            },
+        false => entropy::generate_random_bytes(64),
+    };
 
     hex_output(&entropy_data, "данные энтропии");
 
@@ -32,7 +49,7 @@ fn main() {
     io::stdin().read_line(&mut input).expect("[ERROR] Не получилось получить строку");
 
     let start_vault = Instant::now();
-    let password_hash = vault::get_master_key(&input.trim(), &entropy_data, vault::SecurityProfile::Paranoid).expect("Не удалось сгенерировать мастер-ключ");
+    let password_hash = vault::get_master_key(input.trim(), &entropy_data, vault::SecurityProfile::Paranoid).expect("Не удалось сгенерировать мастер-ключ");
     let duration_vault = start_vault.elapsed();
 
     println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);
@@ -62,8 +79,6 @@ fn main() {
             return;
         }
     };
-    #[allow(unused)]
-    let file_path = "B1CE.bice";
     #[allow(unused)]
     let file = storage::BiceFile::new(&entropy_data, &master_key_to_save);
 
