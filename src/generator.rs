@@ -20,7 +20,7 @@ pub fn generate_password(length: usize, use_uppercase: bool, use_digits: bool, u
     let mut password = String::with_capacity(length);
 
     while password.len() < length {
-        let rand_byte_buf = entropy::generate_random_bytes(length);
+        let rand_byte_buf = entropy::generate_random_bytes(length*2);
         for byte in rand_byte_buf {
             if password.len() == length {
                 break;
