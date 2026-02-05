@@ -26,6 +26,123 @@ impl BiceFile{
             data: encrypted_data.to_vec()
         }
     }
+
+    /// Создает новый экземпляр BiceFile из сырых данных.
+    /// Внутри происходит:
+    /// 1. Генерация ключа из пароля и переданной соли (Argon2).
+    /// 2. Шифрование raw_data (XChaCha20Poly1305).
+    /// 3. Упаковка всего этого в структуру.
+    pub fn encrypt_new(
+        raw_data: &[u8], 
+        password: &str, 
+        salt: &[u8],
+        profile: vault::SecurityProfile
+    ) -> Result<Self,String>
+    {
+        let start_vault = Instant::now();
+        let master_key = vault::get_master_key(password, &salt.to_vec(), profile).map_err(|e| format!("Ошибка Argon2id: {e}"))?;
+        let duration_vault = start_vault.elapsed();
+        println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);
+
+        let encrypted_bytes = crate::encryption::encrypt(raw_data, &master_key)?;
+
+        let mut salt_array = [0u8; 64];
+
+        let profile_id = profile as u8;
+
+        if salt.len() == 64 {
+            salt_array.copy_from_slice(salt);
+        } else {
+            return Err("Соль должна быть ровно 64 байта".to_string());
+        };
+
+        Ok(Self { 
+            header: (*b"B1CE"), 
+            version: (1), 
+            profile_id,
+            salt: (salt_array), 
+            data: (encrypted_bytes)
+        })
+    }
+    /// Сохраняет текущий BiceFile по указанному пути.
+    /// Логика:
+    /// 1. Создать/Перезаписать файл.
+    /// 2. Последовательно записать: header -> version -> salt -> data.
+    /// 3. Атомарно перезапсывает файл, создавая tmp верисию.
+    /// 4. Гарантирует, что файл не будет уничтожен если вдруг компьютер выключится во время перезаписи.
+    pub fn save(&self, path: impl AsRef<std::path::Path>) -> std::io::Result<()> {
+        let path = path.as_ref();
+        let tmp_path = path.with_extension("tmp");
+        {
+            let mut file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(&tmp_path)?;
+            
+            file.write_all(&self.header)?;
+            file.write_all(&[self.version])?;
+            file.write_all(&[self.profile_id])?;
+            file.write_all(&self.salt)?;
+            file.write_all(&self.data)?;
+            file.sync_all()?;
+        }
+
+        fs::rename(&tmp_path, path)?;
+
+        Ok(())
+    }
+    /// Открывает файл, проверяет структуру и читает данные в память.
+    /// Логика:
+    /// 1. Открыть файл.
+    /// 2. Прочитать и сверить header (если не B1CE - ошибка).
+    /// 3. Прочитать version и salt.
+    /// 4. Прочитать остаток файла в data.
+    /// 5. Вернуть Self.
+    pub fn open(path: impl AsRef<std::path::Path>) -> std::io::Result<Self> {
+        let file = File::open(path)?;
+        let mut reader = BufReader::new(file);
+
+        let mut header = [0u8; 4];
+        reader.read_exact(&mut header)?;
+        if &header != b"B1CE" {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Неверный формат файла: отсутствует сигнатура B1CE"));
+        }
+        let mut version_buf = [0u8;1];
+        reader.read_exact(&mut version_buf)?;
+        let version = version_buf[0];
+
+        let mut profile_buf = [0u8;1];
+        reader.read_exact(&mut profile_buf);
+        let profile_id = profile_buf[0];
+        if SecurityProfile::from_u8(profile_id).is_none(){
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Неизвестный профиль безопасности"));
+        }
+
+        let mut salt = [0u8;64];
+        reader.read_exact(&mut salt)?;
+        let mut data = Vec::new();
+        reader.read_to_end(&mut data)?;
+
+        Ok(Self{
+            header,
+            version,
+            profile_id,
+            salt,
+            data
+        })
+    }
+    /// Дешифрует переданную базу данных
+    /// 1. Берёт соль из файла
+    /// 2. Возвращает дешифрованные данные
+    pub fn decrypt(&self, password: &str) -> Result<Vec<u8>, String> {
+        let profile = SecurityProfile::from_u8(self.profile_id).unwrap();
+        // 1. Восстанавливаем ключ, используя СОЛЬ ИЗ ФАЙЛА (self.salt)
+        let master_key = crate::vault::get_master_key(password, &self.salt.to_vec(), crate::vault::SecurityProfile::Paranoid)?;
+        
+        // 2. Расшифровываем
+        crate::encryption::decrypt(&self.data, &master_key)
+    }
 }
 
 // deprecated
