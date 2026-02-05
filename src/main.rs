@@ -17,7 +17,75 @@ fn main() {
 
     #[allow(unused)]
     let file_path = "B1CE.bice";
+    print!("Введите пароль:");
+    let _ = io::stdout().flush();
+    let mut pwd = String::new();
+    io::stdin().read_line(&mut pwd).unwrap();
+    let mut pwd = pwd.trim();
 
+    let mut my_vault = if Path::new(file_path).exists(){
+        println!("[INFO] Загрузка базы данных..");
+        match Vault::load_from_disk(file_path, pwd){
+            Ok(v) => {
+                println!("[SUCCESS] Успешный вход. Записей: {}", v.entries.len());
+                v
+            }
+            Err(e) => {
+                println!("[ERROR] Ошибка входа: {e}");
+                return;
+            }
+        }
+    } else {
+        println!("[INFO] Файл не найден. Создание новой базы.");
+        Vault::new()
+    };
+
+    loop {
+        println!("\n=== BICE MENU ===");
+        println!("1. Показать пароли");
+        println!("2. Добавить пароль");
+        println!("3. Сохранить и Выйти");
+        print!("> ");
+        io::stdout().flush().unwrap();
+
+        let mut choice = String::new();
+        io::stdin().read_line(&mut choice).unwrap();
+
+        match choice.trim() {
+            "1" => {
+                for (i, entry) in my_vault.entries.iter().enumerate() {
+                    println!("{}. {} | Login: {} | Password: {} | Description: {:?} ", i + 1, entry.service, entry.login, entry.password, entry.description);
+                }
+            }
+            "2" => {
+                println!("Введите Сервис, Логин, Пароль, Описание (через пробел):");
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                let parts: Vec<&str> = input.trim().split_whitespace().collect();
+                if parts.len() >= 4 {
+                    my_vault.add(parts[0].to_string(), parts[1].to_string(), parts[2].to_string(), Some(parts[3].to_string()));
+                    println!("[OK] Добавлено в память.");
+                } else {
+                    println!("[ERR] Неверный формат.");
+                }
+            }
+            "3" => {
+                println!("[INFO] Сохранение...");
+                match my_vault.save_to_disk(file_path, pwd, vault::SecurityProfile::Paranoid) {
+                    Ok(_) => {
+                        println!("[SUCCESS] Данные зашифрованы и сохранены. Пока!");
+                        break;
+                    },
+                    Err(e) => println!("[ERROR] Не удалось сохранить: {}", e),
+                }
+            }
+            _ => println!("Непонятная команда"),
+        }
+    }
+
+
+    // deprecated
+    /*
     let hex_output = |output_to_hex: &[u8], description: &str| {
         let output: Vec<_> = (output_to_hex)        
         .iter()
