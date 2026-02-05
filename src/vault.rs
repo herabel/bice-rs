@@ -1,11 +1,26 @@
 use argon2::{self, Argon2, Params};
 #[allow(unused)]
+#[derive(Clone, Copy, Debug)]
+#[repr(u8)]
 pub enum SecurityProfile {
-    Fast,
-    Standard,
-    Paranoid,
-    Extreme
+    Fast = 1,
+    Standard = 2,
+    Paranoid = 3,
+    Extreme = 4
 }
+
+impl SecurityProfile {
+    pub fn from_u8 (n: u8) -> Option<Self>{
+        match n {
+            1 => Some(Self::Fast),
+            2 => Some(Self::Standard),
+            3 => Some(Self::Paranoid),
+            4 => Some(Self::Extreme),
+            _ => None
+        }
+    }
+}
+
 pub fn get_master_key(password: &str, entropy: &[u8], profile: SecurityProfile) -> Result<[u8; 32], String>{
     //стоит задавать m_cost (1 параметр) как желаемое МБ * 1024 => (64 (МБ) * 1024)
     let (m,t,p) = match profile {
