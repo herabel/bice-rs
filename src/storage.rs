@@ -1,4 +1,7 @@
-use std::{fs::File, io::{BufReader, Read}};
+use std::time::Instant;
+use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Write}};
+
+use crate::{vault::{self, SecurityProfile}};
 
 // TODO: Рефакторинг, модуль должен получать все данные для шифрования и работать по принципу чёрного ящика, чтобы разгрузить логику main.rs
 // main.rs не должен выступать оркестратором данных, это снижает поддержку и излишне усложняет код
