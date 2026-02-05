@@ -163,7 +163,7 @@ pub fn save_password_bice(path: &str, password_hashed: &[u8]) -> std::io::Result
     file.write(b"0909")?;
     Ok(())
 }
-*/
+
 
 pub fn read_bice(path: &str) -> Result<BiceFile, String> {
     let file = File::open(path).map_err(|e| format!("[ERROR] Ошибка открытия файла: {}", e))?;
@@ -182,3 +182,4 @@ pub fn read_bice(path: &str) -> Result<BiceFile, String> {
 
     Ok(BiceFile {salt, data: encrypted_data, header: *b"B1CE", version: 1 })
 }
+*/
