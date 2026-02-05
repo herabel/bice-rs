@@ -3,10 +3,11 @@ mod encryption;
 mod vault;
 mod generator;
 mod storage;
+mod models;
 
 use std::path::Path;
-use std::time::Instant;
 use std::io::{self, Write};
+use crate::models::Vault;
 #[allow(unused)]
 use crate::vault::get_master_key;
 
