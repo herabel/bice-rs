@@ -153,9 +153,7 @@ fn main() {
 
     println!("\n[INFO] Проверка чтения из файла...");
     
-    // deprecated
-
-    /*if Path::new(file_path).exists() {
+    if Path::new(file_path).exists() {
         let mut master_key_login = String::new();
         println!("[INFO] Файл БД найден. Необходим вход.");
         print!("[LOGIN] Введите пароль: ");
