@@ -21,7 +21,7 @@ pub fn generate_password(length: usize, use_uppercase: bool, use_digits: bool, u
 
     let threshold = (256 / chars_len) * chars_len;
 
-    let mut password = String::with_capacity(length);
+    let mut password = String::with_capacity(length*2);
 
     while password.len() < length {
         let rand_byte_buf = entropy::generate_random_bytes(length*2);
