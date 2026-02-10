@@ -135,7 +135,7 @@ fn main() {
                 println!("[INFO] Сохранение...");
                 match my_vault.save_to_disk(file_path, pwd, current_profile) {
                     Ok(_) => {
-                        println!("[SUCCESS] Данные зашифрованы и сохранены. Пока!");
+                        println!("[SUCCESS] Данные зашифрованы и сохранены. Покеда");
                         break;
                     },
                     Err(e) => println!("[ERROR] Не удалось сохранить: {}", e),
