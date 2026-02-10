@@ -25,7 +25,7 @@ impl BiceFile{
             salt: salt_array,
             data: encrypted_data.to_vec()
         }
-    }
+    }*/
 
     /// Создает новый экземпляр BiceFile из сырых данных.
     /// Внутри происходит:
