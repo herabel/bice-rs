@@ -67,7 +67,7 @@ impl BiceFile{
     /// Сохраняет текущий BiceFile по указанному пути.
     /// Логика:
     /// 1. Создать/Перезаписать файл.
-    /// 2. Последовательно записать: header -> version -> salt -> data.
+    /// 2. Последовательно записать: header -> version -> profile_id -> salt -> data.
     /// 3. Атомарно перезапсывает файл, создавая tmp верисию.
     /// 4. Гарантирует, что файл не будет уничтожен если вдруг компьютер выключится во время перезаписи.
     pub fn save(&self, path: impl AsRef<std::path::Path>) -> std::io::Result<()> {
@@ -96,7 +96,7 @@ impl BiceFile{
     /// Логика:
     /// 1. Открыть файл.
     /// 2. Прочитать и сверить header (если не B1CE - ошибка).
-    /// 3. Прочитать version и salt.
+    /// 3. Прочитать version, salt и profile.
     /// 4. Прочитать остаток файла в data.
     /// 5. Вернуть Self.
     pub fn open(path: impl AsRef<std::path::Path>) -> std::io::Result<Self> {
