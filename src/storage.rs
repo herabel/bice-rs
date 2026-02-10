@@ -142,6 +142,16 @@ impl BiceFile{
         // 2. Расшифровываем
         crate::encryption::decrypt(&self.data, &master_key)
     }
+
+    pub fn get_profile_id(path: impl AsRef<std::path::Path>) -> u8 {
+        let file = File::open(path).unwrap();
+        let mut reader = BufReader::new(file);
+
+        reader.seek_relative(5).unwrap();
+        let mut profile_buf = [0u8;1];
+        reader.read_exact(&mut profile_buf).unwrap();
+        profile_buf[0]
+    }
 }
 
 // deprecated
