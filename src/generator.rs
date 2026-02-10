@@ -32,6 +32,7 @@ pub fn generate_password(length: usize, use_uppercase: bool, use_digits: bool, u
             let value = byte as usize;
             
             if value >= threshold{
+                #[cfg(debug_assertions)]
                 println!("[DEBUG] Произошёл отсев байта {} ({:02X})", value, value);
                 continue;
             }
