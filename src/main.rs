@@ -96,8 +96,44 @@ fn main() {
                     }
                 }
             }
+            "4" => {
+                let mut selection_profile = String::new();
+                loop {
+                    println!("\n=== Выбор профиля шифрования для Argon2id ===");
+                    println!("[m,t,p] - m - объем используемой памяти в МБ, t - количество итераций, p - параллелизм");
+                    println!("Для корректной работы нужен СВОБОДНЫЙ блок памяти в ОЗУ");
+                    println!("=============================================");
+                    println!("1. Fast [64,6,4]");
+                    println!("2. Standard [128,8,4]");
+                    println!("3. Paranoid [512,8,4]");
+                    println!("4. Extreme [1024,12,4]");
+                    print!("> ");
+                    io::stdout().flush().unwrap();
+                    io::stdin().read_line(&mut selection_profile).unwrap();
+                    match selection_profile.trim() {
+                        "1" => { current_profile = 
+                            vault::SecurityProfile::Fast;
+                            break;
+                        },
+                        "2" => { current_profile = 
+                            vault::SecurityProfile::Standard;
+                            break;
+                        },
+                        "3" => { current_profile = 
+                            vault::SecurityProfile::Paranoid;
+                            break;
+                        },
+                        "4" => { 
+                            current_profile = vault::SecurityProfile::Extreme;
+                            break;
+                        },
+                        _ => println!("[WARN] Такой профиль не найден.")
+                    }
+                }
+            }
+            "0" => {
                 println!("[INFO] Сохранение...");
-                match my_vault.save_to_disk(file_path, pwd, vault::SecurityProfile::Paranoid) {
+                match my_vault.save_to_disk(file_path, pwd, current_profile) {
                     Ok(_) => {
                         println!("[SUCCESS] Данные зашифрованы и сохранены. Пока!");
                         break;
