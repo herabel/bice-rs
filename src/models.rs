@@ -24,6 +24,11 @@ impl Vault {
         self.entries.push(PasswordEntry { service, login, password, description });
     }
 
+    pub fn get_profile_id(path: &str) -> vault::SecurityProfile {
+        let id_u8 = storage::BiceFile::get_profile_id(path);
+        vault::SecurityProfile::from_u8(id_u8).unwrap()
+    }
+
     pub fn load_from_disk(path: &str, master_pass: &str) -> Result<Self, String> {
         let bice = BiceFile::open("B1CE.bice").map_err(|e| e.to_string())?;
         let decrypted_data = bice.decrypt(master_pass)?;
