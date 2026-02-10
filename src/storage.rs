@@ -112,7 +112,7 @@ impl BiceFile{
         let version = version_buf[0];
 
         let mut profile_buf = [0u8;1];
-        reader.read_exact(&mut profile_buf);
+        reader.read_exact(&mut profile_buf)?;
         let profile_id = profile_buf[0];
         if SecurityProfile::from_u8(profile_id).is_none(){
             return Err(io::Error::new(io::ErrorKind::InvalidData, "Неизвестный профиль безопасности"));
