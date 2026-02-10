@@ -1,5 +1,9 @@
 use crate::entropy;
 
+
+/// Возвращает String пароль, который генерируется по вводимым параметрам
+/// через отсев некорректных байт исправлен modulo-bias, который позволяет некоторым значениям (символам) выпадать чаще
+/// 
 pub fn generate_password(length: usize, use_uppercase: bool, use_digits: bool, use_specials: bool) -> String {
     pub const LOWERCASE: &str = "abcdefghijklmnopqrstuvwxyz";
     pub const UPPERCASE: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
