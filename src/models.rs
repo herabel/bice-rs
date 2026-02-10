@@ -30,7 +30,7 @@ impl Vault {
     }
 
     pub fn load_from_disk(path: &str, master_pass: &str) -> Result<Self, String> {
-        let bice = BiceFile::open("B1CE.bice").map_err(|e| e.to_string())?;
+        let bice = BiceFile::open(path).map_err(|e| e.to_string())?;
         let decrypted_data = bice.decrypt(master_pass)?;
         let vault: Vault = postcard::from_bytes(&decrypted_data).map_err(|e| format!("Ошибка структуры данных {e}!"))?;
         Ok(vault)
