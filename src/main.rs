@@ -7,6 +7,8 @@ mod models;
 
 use std::path::Path;
 use std::io::{self, Write};
+use std::usize;
+
 use crate::models::Vault;
 #[allow(unused)]
 use crate::vault::get_master_key;
@@ -17,7 +19,7 @@ fn main() {
 
     #[allow(unused)]
     let file_path = "B1CE.bice";
-    print!("Введите пароль:");
+    print!("Введите пароль: ");
     let _ = io::stdout().flush();
     let mut pwd = String::new();
     io::stdin().read_line(&mut pwd).unwrap();
