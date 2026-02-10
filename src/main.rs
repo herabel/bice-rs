@@ -77,6 +77,25 @@ fn main() {
                 }
             }
             "3" => {
+                loop {
+                    println!("\nПример ввода: 24 true true true");
+                    println!("(length, use_uppercase, use_digits, use_specials)");
+                    println!("Введите настройки генератора паролей (через пробел): ");
+                    let mut input = String::new();
+                    io::stdin().read_line(&mut input).unwrap();
+                    let parts: Vec<&str> = input.trim().split_whitespace().collect();
+                    if parts.len() >= 4 {
+                        let length: usize = parts[0].parse().unwrap();
+                        let use_uppercase: bool = parts[1].parse().unwrap();
+                        let use_digits: bool = parts[2].parse().unwrap();
+                        let use_specials: bool = parts[3].parse().unwrap();
+                        println!("Ваш пароль с параметрами: {}", generator::generate_password(length, use_uppercase, use_digits, use_specials));
+                        break;
+                    } else {
+                        println!("[ERR] Неверный формат.");
+                    }
+                }
+            }
                 println!("[INFO] Сохранение...");
                 match my_vault.save_to_disk(file_path, pwd, vault::SecurityProfile::Paranoid) {
                     Ok(_) => {
