@@ -23,7 +23,7 @@ fn main() {
     let _ = io::stdout().flush();
     let mut pwd = String::new();
     io::stdin().read_line(&mut pwd).unwrap();
-    let mut pwd = pwd.trim();
+    let pwd = pwd.trim();
 
     let mut my_vault = if Path::new(file_path).exists(){
         println!("[INFO] Загрузка базы данных..");
