@@ -1,5 +1,7 @@
+use std::path;
+
 use serde::{Serialize, Deserialize};
-use crate::{storage::BiceFile};
+use crate::{storage::{self, BiceFile}, vault::{self, SecurityProfile}};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PasswordEntry {
