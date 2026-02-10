@@ -25,11 +25,14 @@ fn main() {
     io::stdin().read_line(&mut pwd).unwrap();
     let pwd = pwd.trim();
 
+    let mut current_profile= vault::SecurityProfile::Standard;
+
     let mut my_vault = if Path::new(file_path).exists(){
         println!("[INFO] Загрузка базы данных..");
         match Vault::load_from_disk(file_path, pwd){
             Ok(v) => {
                 println!("[SUCCESS] Успешный вход. Записей: {}", v.entries.len());
+                current_profile = Vault::get_profile_id(file_path);
                 v
             }
             Err(e) => {
@@ -44,6 +47,8 @@ fn main() {
 
     loop {
         println!("\n=== BICE MENU ===");
+        println!("=== Текущий профиль: {:?} ===", current_profile);
+        println!("Детальнее ознакомиться с настройками каждого профиля можно в пункте 4 меню\n");
         println!("1. Показать пароли");
         println!("2. Добавить пароль");
         println!("3. Сохранить и Выйти");
