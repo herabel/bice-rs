@@ -67,12 +67,19 @@ fn main() {
                 }
             }
             "2" => {
-                println!("Введите Сервис, Логин, Пароль, Описание (через пробел):");
+                println!("Введите через пробел Сервис, Логин, Пароль, Описание (в описании можно пробелы далее - они не будут разделять):");
                 let mut input = String::new();
                 io::stdin().read_line(&mut input).unwrap();
                 let parts: Vec<&str> = input.trim().split_whitespace().collect();
-                if parts.len() >= 4 {
-                    my_vault.add(parts[0].to_string(), parts[1].to_string(), parts[2].to_string(), Some(parts[3].to_string()));
+                if parts.len() >= 3 {
+                    
+                    let description = if parts.len() >= 4 {
+                        Some(parts[3..].join(" ")) 
+                    } else {
+                        None
+                    };
+
+                    my_vault.add(parts[0].to_string(), parts[1].to_string(), parts[2].to_string(), description);
                     println!("[OK] Добавлено в память.");
                 } else {
                     println!("[ERR] Неверный формат.");
