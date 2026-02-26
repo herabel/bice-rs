@@ -142,6 +142,14 @@ fn main() {
                     }
                 }
             }
+            "5" => {
+                #[cfg(target_arch = "x86_64")]
+                if is_x86_feature_detected!("rdseed") {
+                    cpu_entropy::get_entropy_from_cpu();
+                } else {
+                    println!("Процессор не поддерживает RDSEED");
+                }
+            }
             "0" => {
                 println!("[INFO] Сохранение...");
                 match my_vault.save_to_disk(file_path, pwd, current_profile) {
