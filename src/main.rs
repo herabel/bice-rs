@@ -4,6 +4,7 @@ mod vault;
 mod generator;
 mod storage;
 mod models;
+pub mod cpu_entropy;
 
 use std::path::Path;
 use std::io::{self, Write};
@@ -53,6 +54,7 @@ fn main() {
         println!("2. Добавить пароль");
         println!("3. Сгенерировать пароль");
         println!("4. Выбрать профиль шифрования Argon");
+        println!("5. Запустить тесты");
         println!("0. Сохранить и Выйти");
         print!("> ");
         io::stdout().flush().unwrap();
