@@ -1,5 +1,4 @@
 use getrandom;
-use rdrand::{self, RdRand, RdSeed};
 use tiny_keccak::{Hasher, Shake, Xof};
 // TODO: Общий реворк модуля в соответствии с NIST SP800-90C (https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90C.pdf)
 
