@@ -56,7 +56,7 @@ fn main() {
         println!("4. Выбрать профиль шифрования Argon");
         println!("5. Запустить тесты");
         println!("0. Сохранить и Выйти");
-        print!("> ");
+        print!(">>> ");
         io::stdout().flush().unwrap();
 
         let mut choice = String::new();
@@ -119,7 +119,7 @@ fn main() {
                     println!("2. Standard [128,8,4]");
                     println!("3. Paranoid [512,8,4]");
                     println!("4. Extreme [1024,12,4]");
-                    print!("> ");
+                    print!(">>> ");
                     io::stdout().flush().unwrap();
                     io::stdin().read_line(&mut selection_profile).unwrap();
                     match selection_profile.trim() {
@@ -152,7 +152,8 @@ fn main() {
                 }
             }
             "0" => {
-                println!("[INFO] Сохранение...");
+                println!("[INFO] Сохранение, не выключайте устройство и программу...");
+                println!("[INFO] Сохранение может занять время в зависимости от выбранного профиля Argon и Вашего устройства.");
                 match my_vault.save_to_disk(file_path, pwd, current_profile) {
                     Ok(_) => {
                         println!("[SUCCESS] Данные зашифрованы и сохранены. Покеда");
@@ -161,7 +162,7 @@ fn main() {
                     Err(e) => println!("[ERROR] Не удалось сохранить: {}", e),
                 }
             }
-            _ => println!("Непонятная команда"),
+            _ => println!("Непонятная команда."),
         }
     }
 
