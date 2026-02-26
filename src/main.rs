@@ -89,18 +89,19 @@ fn main() {
             }
             "3" => {
                 loop {
-                    println!("\nПример ввода: 24 true true true");
-                    println!("(length, use_uppercase, use_digits, use_specials)");
+                    println!("\nПример ввода: 24 true true true false");
+                    println!("(length, use_uppercase, use_digits, use_specials, use_ascii)");
                     println!("Введите настройки генератора паролей (через пробел): ");
                     let mut input = String::new();
                     io::stdin().read_line(&mut input).unwrap();
                     let parts: Vec<&str> = input.trim().split_whitespace().collect();
-                    if parts.len() >= 4 {
+                    if parts.len() == 5 {
                         let length: usize = parts[0].parse().unwrap();
                         let use_uppercase: bool = parts[1].parse().unwrap();
                         let use_digits: bool = parts[2].parse().unwrap();
                         let use_specials: bool = parts[3].parse().unwrap();
-                        println!("Ваш пароль с параметрами: {}", generator::generate_password(length, use_uppercase, use_digits, use_specials));
+                        let use_ascii: bool = parts[4].parse().unwrap();
+                        println!("Ваш пароль с параметрами: {}", generator::generate_password(length, use_uppercase, use_digits, use_specials, use_ascii));
                         break;
                     } else {
                         println!("[ERR] Неверный формат.");
