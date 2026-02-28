@@ -14,18 +14,6 @@ pub struct BiceFile{
 }
 
 impl BiceFile{
-    /*pub fn new(salt: &[u8], encrypted_data: &[u8], profile_id: u8) -> Self {
-        let mut salt_array = [0u8; 64];
-        salt_array.copy_from_slice(salt);
-        Self {
-            header: *b"B1CE",
-            version: 1,
-            profile_id,
-            salt: salt_array,
-            data: encrypted_data.to_vec()
-        }
-    }*/
-
     /// Создает новый экземпляр BiceFile из сырых данных.
     /// Внутри происходит:
     /// 1. Генерация ключа из пароля и переданной соли (Argon2).
