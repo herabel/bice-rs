@@ -1,8 +1,10 @@
 #[cfg(any(target_arch = "x86_64"))]
+/// Тестовая функция для вывода rdseed и rdrand.
 pub fn get_entropy_from_cpu() {
-    println!("{}", gen_rdseed());
+    println!("rdseed: {}\nrdrand: {}", gen_rdseed(), gen_rdrand());
 }
 
+/// Генерирует 64 байта (u64) сид (rdseed) из низкоуровневой команды процессора через запрос к std::arch::x86_64.
 pub fn gen_rdseed() -> u64 {
     if is_x86_feature_detected!("rdseed") {
         unsafe {
@@ -17,6 +19,7 @@ pub fn gen_rdseed() -> u64 {
     }
 }
 
+/// Генерирует 64 байта (u64) случайное значение (rdrand) из низкоуровневой команды процессора через запрос к std::arch::x86_64.
 pub fn gen_rdrand() -> u64 {
     if is_x86_feature_detected!("rdrand") {
         unsafe {
