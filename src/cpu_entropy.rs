@@ -1,5 +1,29 @@
 #[cfg(any(target_arch = "x86_64"))]
 pub fn get_entropy_from_cpu() {
+/// Loop to gather entropy from "try_rdseed()". Returns None if attempt is blank
+pub fn gen_rdseed(loop_amount: u16) -> Option<u64> {
+    for _ in 0..loop_amount {
+        let attempt = try_rdseed();
+        if attempt.is_some() {
+            return attempt;
+        }
+        std::hint::spin_loop();
+    }
+    None
+}
+
+/// Loop to gather entropy from "try_rdrand()". Returns None if blank
+pub fn gen_rdrand(loop_amount: u16) -> Option<u64> {
+    for _ in 0..loop_amount {
+        let attempt = try_rdrand();
+        if attempt.is_some() {
+            return attempt;
+        }
+        std::hint::spin_loop();
+    }
+    None
+}
+
 /// Does a query to "rdseed" processor register and returns None if status == 0 or unsupported feature
 pub fn try_rdseed() -> Option<u64> {
     if is_x86_feature_detected!("rdseed") {
