@@ -41,7 +41,7 @@ impl BiceFile{
         let start_vault = Instant::now();
         let master_key = vault::get_master_key(password, &salt.to_vec(), profile).map_err(|e| format!("Ошибка Argon2id: {e}"))?;
         let duration_vault = start_vault.elapsed();
-        println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);
+        println!("[PERF] : Argon2id выполнен за: {:?}", duration_vault);
 
         let encrypted_bytes = crate::encryption::encrypt(raw_data, &master_key)?;
 
@@ -105,7 +105,7 @@ impl BiceFile{
         let mut header = [0u8; 4];
         reader.read_exact(&mut header)?;
         if &header != b"B1CE" {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Неверный формат файла: отсутствует сигнатура B1CE"));
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "[FS] : отсутствует сигнатура B1CE"));
         }
         let mut version_buf = [0u8;1];
         reader.read_exact(&mut version_buf)?;
@@ -115,7 +115,7 @@ impl BiceFile{
         reader.read_exact(&mut profile_buf)?;
         let profile_id = profile_buf[0];
         if SecurityProfile::from_u8(profile_id).is_none(){
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Неизвестный профиль безопасности"));
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "[FS] : Неизвестный профиль безопасности"));
         }
 
         let mut salt = [0u8;64];
