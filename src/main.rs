@@ -18,7 +18,6 @@ use crate::vault::get_master_key;
 // TODO 2(в данный момент основное): Рефакторинг, больше инкапсуляции, минимум логики. main.rs должен стать тонкой прослойкой, не более.
 fn main() {
 
-    #[allow(unused)]
     let file_path = "B1CE.bice";
     print!("Введите пароль: ");
     let _ = io::stdout().flush();
