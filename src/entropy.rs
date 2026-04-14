@@ -4,6 +4,13 @@ use tiny_keccak::{Hasher, Shake, Xof};
 use crate::cpu_entropy;
 use rand_core_06::{self};
 
+pub struct HardwareEntropyPool{
+    state: tiny_keccak::Shake,
+    counter: usize,
+}
+
+impl HardwareEntropyPool {
+
     let mut hasher= Shake::v256();
 
     let mut os_buf = [0u8; 64];
