@@ -57,4 +57,27 @@ impl rand_core_06::RngCore for HardwareEntropyPool {
     }
 }
 
+impl rand_core::TryRng for HardwareEntropyPool{
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Self::Error> {
+        self.state.squeeze(dst);
+        self.counter += dst.len();
+        Ok(())
+    }
+
+    fn try_next_u32(&mut self) -> Result<u32,Self::Error> {
+        let mut local_array = [0u8;4];
+        let _ = rand_core::TryRng::try_fill_bytes(self, &mut local_array);
+        let output = u32::from_le_bytes(local_array);
+        Ok(output)
+    }
+
+    fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+        let mut local_array = [0u8;8];
+        let _ = rand_core::TryRng::try_fill_bytes(self, &mut local_array);
+        let output = u64::from_le_bytes(local_array);
+        Ok(output)
+    }
+    
+    type Error = core::convert::Infallible;
+}
 }
