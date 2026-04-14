@@ -10,6 +10,7 @@ pub struct HardwareEntropyPool{
 }
 
 impl HardwareEntropyPool {
+    pub fn new() -> Self {
 
     let mut hasher= Shake::v256();
 
@@ -33,7 +34,7 @@ impl HardwareEntropyPool {
 
     hasher.update(&os_buf);
 
-    hasher.squeeze(&mut vec_buf);
-
-    vec_buf
+        Self { state: (hasher), counter: (0) }
+    }
+}
 }
