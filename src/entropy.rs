@@ -1,10 +1,8 @@
 use getrandom;
+use rand_core::TryRng;
 use tiny_keccak::{Hasher, Shake, Xof};
 use crate::cpu_entropy;
-// TODO: Общий реворк модуля в соответствии с NIST SP800-90C (https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90C.pdf)
-
-pub fn generate_random_bytes(size: usize) -> Vec<u8> {
-    let mut vec_buf = vec![0u8; size];
+use rand_core_06::{self};
 
     let mut hasher= Shake::v256();
 
