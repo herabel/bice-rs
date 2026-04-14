@@ -80,4 +80,9 @@ impl rand_core::TryRng for HardwareEntropyPool{
     
     type Error = core::convert::Infallible;
 }
+
+impl rand_core::TryCryptoRng for HardwareEntropyPool {}
+impl rand_core_06::CryptoRng for HardwareEntropyPool {}
+
+
 }
