@@ -3,93 +3,165 @@ mod encryption;
 mod vault;
 mod generator;
 mod storage;
+mod models;
+pub mod cpu_entropy;
 
 use std::path::Path;
-use std::time::Instant;
 use std::io::{self, Write};
+use std::usize;
 
+use crate::models::Vault;
+#[allow(unused)]
 use crate::vault::get_master_key;
 
 // TODO: Общий реворк, добавление TUI, стилизация, zeroize и надёжные связи.
+// TODO 2(в данный момент основное): Рефакторинг, больше инкапсуляции, минимум логики. main.rs должен стать тонкой прослойкой, не более.
 fn main() {
-    println!("[INFO] Запуск генератора энтропии...");
-    let entropy_data = entropy::generate_random_bytes(512);
 
-    let hex_output: String = (&entropy_data)
-        .iter()
-        .map(|b| format!("{:02x}", b))
-        .collect();
-
-    println!("Сгенерированная энтропия: {}", hex_output);
-
-    let mut input = String::new();
+    let file_path = "B1CE.bice";
     print!("Введите пароль: ");
     let _ = io::stdout().flush();
-    io::stdin().read_line(&mut input).expect("[ERROR] Не получилось получить строку");
+    let mut pwd = String::new();
+    io::stdin().read_line(&mut pwd).unwrap();
+    let pwd = pwd.trim();
 
-    let start_vault = Instant::now();
-    let password_hash = vault::get_master_key(&input.trim(), &entropy_data, vault::SecurityProfile::Paranoid).expect("Не удалось сгенерировать мастер-ключ");
-    let duration_vault = start_vault.elapsed();
+    let mut current_profile= vault::SecurityProfile::Standard;
 
-    println!("[PERF] Argon2id выполнен за: {:?}", duration_vault);
+    let mut my_vault = if Path::new(file_path).exists(){
+        println!("[INFO] Загрузка базы данных..");
+        match Vault::load_from_disk(file_path, pwd){
+            Ok(v) => {
+                println!("[SUCCESS] Успешный вход. Записей: {}", v.entries.len());
+                current_profile = Vault::get_profile_id(file_path);
+                v
+            }
+            Err(e) => {
+                println!("[ERROR] Ошибка входа: {e}");
+                return;
+            }
+        }
+    } else {
+        println!("[INFO] Файл не найден. Создание новой базы.");
+        Vault::new()
+    };
 
-    let hex_output_hash: String = (&password_hash)
-        .iter()
-        .map(|c| format!("{:02x}", c))
-        .collect();
-    println!("{}", hex_output_hash);
+    loop {
+        println!("\n=== BICE MENU ===");
+        println!("=== Текущий профиль: {:?} ===", current_profile);
+        println!("Детальнее ознакомиться с настройками каждого профиля можно в пункте 4 меню\n");
+        println!("1. Показать пароли");
+        println!("2. Добавить пароль");
+        println!("3. Сгенерировать пароль");
+        println!("4. Выбрать профиль шифрования Argon");
+        println!("5. Запустить тесты");
+        println!("0. Сохранить и Выйти");
+        print!(">>> ");
+        io::stdout().flush().unwrap();
 
-    print!("Введите данные: ");
-    let _ = io::stdout().flush();
-    let mut data = String::new();
-    io::stdin().read_line(&mut data).expect("[ERROR] Не получилось получить строку");
+        let mut choice = String::new();
+        io::stdin().read_line(&mut choice).unwrap();
 
-    let cypher_data = encryption::encrypt(data.trim().as_bytes(), &password_hash).expect("[ERROR] Ошибка шифрования данных");
-    println!("Зашифрованый вектор с nonce и прочим: {:?}", cypher_data);
-    let decrypted_bytes = encryption::decrypt(&cypher_data, &password_hash).expect("[ERROR] Ошибка дешифровки данных");
-    let decrypted_data = String::from_utf8(decrypted_bytes).map_err(|e| format!("Ошибка кодировки UTF-8: {}", e)).expect("[ERROR] Ошибка чтения данных");
-    println!("Расшифрованные данные: {:?}", decrypted_data);
+        match choice.trim() {
+            "1" => {
+                for (i, entry) in my_vault.entries.iter().enumerate() {
+                    println!("{}. {} | Login: {} | Password: {} | Description: {:?} ", i + 1, entry.service, entry.login, entry.password, entry.description);
+                }
+            }
+            "2" => {
+                println!("Введите через пробел Сервис, Логин, Пароль, Описание (в описании можно пробелы далее - они не будут разделять):");
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                let parts: Vec<&str> = input.trim().split_whitespace().collect();
+                if parts.len() >= 3 {
+                    
+                    let description = if parts.len() >= 4 {
+                        Some(parts[3..].join(" ")) 
+                    } else {
+                        None
+                    };
 
-    println!("Сгенерированный пароль: {}", generator::generate_password(26, true, true, true));
-
-    let _ = storage::save_bice("B1CE.bice", &entropy_data, &cypher_data).map_err(|e| format!("[ERROR] Ошибка записи в файл: {}", e));
-
-    println!("\n[INFO] Проверка чтения из файла...");
-    
-    let file_path = "B1CE.bice";
-
-    if Path::new(file_path).exists() {
-        let mut master_key_login = String::new();
-        println!("[INFO] Файл БД найден. Необходим вход.");
-        print!("[LOGIN] Введите пароль: ");
-        let _ = io::stdout().flush();
-        let _ = io::stdin().read_line(&mut master_key_login);
-
-        match storage::read_bice(file_path) {
-            Ok(file_content) => {
-                println!("[SUCCESS] Файл успешно прочитан!");
-                println!("Соль из файла (первые 8 байт): {:02x?}", &file_content.salt[..8]);
-                let bice_salt = &file_content.salt.to_vec();
-                println!("Размер зашифрованных данных: {} байт", file_content.encrypted_data.len());
-                
-                let login_password_hash = get_master_key(&master_key_login.trim(), bice_salt, vault::SecurityProfile::Paranoid).expect("[ERROR] Не удалось сгенерировать мастер-ключ для разблокировки БД.");
-                match encryption::decrypt(&file_content.encrypted_data, &login_password_hash) {
-                    Ok(decrypted_bytes) => {
-                        match String::from_utf8(decrypted_bytes) {
-                            Ok(final_text) => {
-                                println!("Данные, восстановленные из файла: {}", final_text);
-                            }
-                            Err(_) => {
-                                println!("[ERR] Ошибка расшифровки файла, битые данные.")
-                            }
-                        };
-                    },
-                    Err(_) =>{
-                        println!("[DENIED] Неверный пароль. Доступ запрещён.")
+                    my_vault.add(parts[0].to_string(), parts[1].to_string(), parts[2].to_string(), description);
+                    println!("[OK] Добавлено в память.");
+                } else {
+                    println!("[ERR] Неверный формат.");
+                }
+            }
+            "3" => {
+                loop {
+                    println!("\nПример ввода: 24 true true true false");
+                    println!("(length, use_uppercase, use_digits, use_specials, use_ascii)");
+                    println!("Введите настройки генератора паролей (через пробел): ");
+                    let mut input = String::new();
+                    io::stdin().read_line(&mut input).unwrap();
+                    let parts: Vec<&str> = input.trim().split_whitespace().collect();
+                    if parts.len() == 5 {
+                        let length: usize = parts[0].parse().unwrap();
+                        let use_uppercase: bool = parts[1].parse().unwrap();
+                        let use_digits: bool = parts[2].parse().unwrap();
+                        let use_specials: bool = parts[3].parse().unwrap();
+                        let use_ascii: bool = parts[4].parse().unwrap();
+                        println!("Ваш пароль с параметрами: {}", generator::generate_password(length, use_uppercase, use_digits, use_specials, use_ascii));
+                        break;
+                    } else {
+                        println!("[ERR] Неверный формат.");
                     }
-                };
-            },
-            Err(e) => println!("[ERROR] Не удалось прочитать файл: {}", e),
+                }
+            }
+            "4" => {
+                let mut selection_profile = String::new();
+                loop {
+                    println!("\n=== Выбор профиля шифрования для Argon2id ===");
+                    println!("[m,t,p] - m - объем используемой памяти в МБ, t - количество итераций, p - параллелизм");
+                    println!("Для корректной работы нужен СВОБОДНЫЙ блок памяти в ОЗУ");
+                    println!("=============================================");
+                    println!("1. Fast [64,6,4]");
+                    println!("2. Standard [128,8,4]");
+                    println!("3. Paranoid [512,8,4]");
+                    println!("4. Extreme [1024,12,4]");
+                    print!(">>> ");
+                    io::stdout().flush().unwrap();
+                    io::stdin().read_line(&mut selection_profile).unwrap();
+                    match selection_profile.trim() {
+                        "1" => { current_profile = 
+                            vault::SecurityProfile::Fast;
+                            break;
+                        },
+                        "2" => { current_profile = 
+                            vault::SecurityProfile::Standard;
+                            break;
+                        },
+                        "3" => { current_profile = 
+                            vault::SecurityProfile::Paranoid;
+                            break;
+                        },
+                        "4" => { 
+                            current_profile = vault::SecurityProfile::Extreme;
+                            break;
+                        },
+                        _ => println!("[WARN] Такой профиль не найден.")
+                    }
+                }
+            }
+            "5" => {
+                #[cfg(target_arch = "x86_64")]
+                if is_x86_feature_detected!("rdseed") {
+                    cpu_entropy::get_entropy_from_cpu();
+                } else {
+                    println!("Процессор не поддерживает RDSEED");
+                }
+            }
+            "0" => {
+                println!("[INFO] Сохранение, не выключайте устройство и программу...");
+                println!("[INFO] Сохранение может занять время в зависимости от выбранного профиля Argon и Вашего устройства.");
+                match my_vault.save_to_disk(file_path, pwd, current_profile) {
+                    Ok(_) => {
+                        println!("[SUCCESS] Данные зашифрованы и сохранены. Покеда");
+                        break;
+                    },
+                    Err(e) => println!("[ERROR] Не удалось сохранить: {}", e),
+                }
+            }
+            _ => println!("Непонятная команда."),
         }
     }
 }

@@ -1,12 +1,27 @@
 use argon2::{self, Argon2, Params};
 #[allow(unused)]
+#[derive(Clone, Copy, Debug)]
+#[repr(u8)]
 pub enum SecurityProfile {
-    Fast,
-    Standard,
-    Paranoid,
-    Extreme
+    Fast = 1,
+    Standard = 2,
+    Paranoid = 3,
+    Extreme = 4
 }
-pub fn get_master_key(password: &str, entropy: &Vec<u8>, profile: SecurityProfile) -> Result<[u8; 32], String>{
+
+impl SecurityProfile {
+    pub fn from_u8 (n: u8) -> Option<Self>{
+        match n {
+            1 => Some(Self::Fast),
+            2 => Some(Self::Standard),
+            3 => Some(Self::Paranoid),
+            4 => Some(Self::Extreme),
+            _ => None
+        }
+    }
+}
+
+pub fn get_master_key(password: &str, entropy: &[u8], profile: SecurityProfile) -> Result<[u8; 32], String>{
     //стоит задавать m_cost (1 параметр) как желаемое МБ * 1024 => (64 (МБ) * 1024)
     let (m,t,p) = match profile {
     SecurityProfile::Fast => (64 * 1024, 6, 4),
@@ -19,5 +34,5 @@ pub fn get_master_key(password: &str, entropy: &Vec<u8>, profile: SecurityProfil
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
     let mut output = [0u8; 32];
 
-    argon2.hash_password_into(password.as_bytes(), &entropy, &mut output).map_err(|e| e.to_string()).map(|_| output)
+    argon2.hash_password_into(password.as_bytes(), entropy, &mut output).map_err(|e| e.to_string()).map(|_| output)
 }
