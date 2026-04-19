@@ -49,6 +49,16 @@ impl BiceFile{
             data: (encrypted_bytes)
         })
     }
+
+    pub fn get_salt_from_file(path: impl AsRef<std::path::Path>) -> std::io::Result<[u8;64]>{
+        let mut file = File::open(path)?;
+        let _ = file.seek(io::SeekFrom::Start(6));
+        let mut reader = BufReader::new(file);
+        let mut salt = [0u8;64];
+        reader.read_exact(&mut salt)?;
+        Ok(salt)
+    }
+
     /// Сохраняет текущий BiceFile по указанному пути.
     /// Логика:
     /// 1. Создать/Перезаписать файл.
