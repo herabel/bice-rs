@@ -23,7 +23,7 @@ impl BiceFile{
     /// 3. Упаковка всего этого в структуру.
     pub fn encrypt_new(
         raw_data: &[u8], 
-        password: &str, 
+        password: [u8;32], 
         salt: &[u8],
         profile: vault::SecurityProfile
     ) -> Result<Self,String>
