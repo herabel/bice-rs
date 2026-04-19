@@ -14,6 +14,12 @@ pub struct Vault {
     pub entries: Vec<PasswordEntry>,
 }
 
+impl PartialEq for Vault{
+    fn eq(&self, other: &Self) -> bool {
+        self.entries == other.entries
+    }
+}
+
 impl Vault { 
     pub fn new() -> Self {
         Self {entries: Vec::new()}
