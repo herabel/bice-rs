@@ -29,7 +29,7 @@ impl BiceFile{
     ) -> Result<Self,String>
     {
 
-        let encrypted_bytes = crate::encryption::encrypt(raw_data, &master_key)?;
+        let encrypted_bytes = crate::encryption::encrypt(raw_data, &password)?;
 
         let mut salt_array = [0u8; 64];
 
