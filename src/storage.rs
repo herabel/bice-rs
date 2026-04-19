@@ -28,10 +28,6 @@ impl BiceFile{
         profile: vault::SecurityProfile
     ) -> Result<Self,String>
     {
-        let start_vault = Instant::now();
-        let master_key = vault::get_master_key(password, &salt.to_vec(), profile).map_err(|e| format!("Ошибка Argon2id: {e}"))?;
-        let duration_vault = start_vault.elapsed();
-        println!("[PERF] : Argon2id выполнен за: {:?}", duration_vault);
 
         let encrypted_bytes = crate::encryption::encrypt(raw_data, &master_key)?;
 
