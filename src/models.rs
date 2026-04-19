@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::{storage::{self, BiceFile}, vault::{self}};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct PasswordEntry {
     pub service: String,
     pub login: String,
