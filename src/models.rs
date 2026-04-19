@@ -33,7 +33,7 @@ impl Vault {
         vault::SecurityProfile::from_u8(id_u8).unwrap()
     }
 
-    pub fn load_from_disk(path: &str, master_pass: &str) -> Result<Self, String> {
+    pub fn load_from_disk(path: &str, master_pass: [u8;32]) -> Result<Self, String> {
         let bice = BiceFile::open(path).map_err(|e| e.to_string())?;
         let decrypted_data = bice.decrypt(master_pass)?;
         let vault: Vault = postcard::from_bytes(&decrypted_data).map_err(|e| format!("Ошибка структуры данных {e}!"))?;
