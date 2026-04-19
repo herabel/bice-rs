@@ -1,3 +1,5 @@
+use std::io::Seek;
+use std::path;
 use std::time::Instant;
 use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Write}};
 
@@ -8,7 +10,7 @@ use crate::{vault::{self, SecurityProfile}};
 pub struct BiceFile{
     pub header: [u8;4],
     pub version: u8,
-    profile_id: u8,
+    pub profile_id: u8,
     pub salt: [u8;64],
     pub data: Vec<u8>
 }
