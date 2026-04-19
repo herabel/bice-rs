@@ -130,13 +130,9 @@ impl BiceFile{
     /// Дешифрует переданную базу данных
     /// 1. Берёт соль из файла
     /// 2. Возвращает дешифрованные данные
-    pub fn decrypt(&self, password: &str) -> Result<Vec<u8>, String> {
+    pub fn decrypt(&self, password: [u8;32]) -> Result<Vec<u8>, String> {
         let profile = SecurityProfile::from_u8(self.profile_id).unwrap();
-        // 1. Восстанавливаем ключ, используя СОЛЬ ИЗ ФАЙЛА (self.salt)
-        let master_key = crate::vault::get_master_key(password, &self.salt.to_vec(), profile)?;
-        
-        // 2. Расшифровываем
-        crate::encryption::decrypt(&self.data, &master_key)
+        crate::encryption::decrypt(&self.data, &password)
     }
 
     pub fn get_profile_id(path: impl AsRef<std::path::Path>) -> u8 {
