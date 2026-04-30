@@ -1,7 +1,4 @@
-use std::io::Seek;
-use std::path;
-use std::time::Instant;
-use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Write}};
+use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Seek, Write}};
 
 use crate::{vault::{self, SecurityProfile}};
 
@@ -50,6 +47,7 @@ impl BiceFile{
         })
     }
 
+
     pub fn get_salt_from_file(path: impl AsRef<std::path::Path>) -> std::io::Result<[u8;64]>{
         let mut file = File::open(path)?;
         let _ = file.seek(io::SeekFrom::Start(6));
@@ -58,6 +56,7 @@ impl BiceFile{
         reader.read_exact(&mut salt)?;
         Ok(salt)
     }
+
 
     /// Сохраняет текущий BiceFile по указанному пути.
     /// Логика:
