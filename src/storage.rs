@@ -131,17 +131,16 @@ impl BiceFile{
     /// 1. Берёт соль из файла
     /// 2. Возвращает дешифрованные данные
     pub fn decrypt(&self, password: [u8;32]) -> Result<Vec<u8>, String> {
-        let profile = SecurityProfile::from_u8(self.profile_id).unwrap();
         crate::encryption::decrypt(&self.data, &password)
     }
 
-    pub fn get_profile_id(path: impl AsRef<std::path::Path>) -> u8 {
-        let file = File::open(path).unwrap();
+    pub fn get_profile_id(path: impl AsRef<std::path::Path>) -> Option<u8> {
+        let file = File::open(path).ok()?;
         let mut reader = BufReader::new(file);
 
-        reader.seek_relative(5).unwrap();
+        reader.seek_relative(5).ok()?;
         let mut profile_buf = [0u8;1];
-        reader.read_exact(&mut profile_buf).unwrap();
-        profile_buf[0]
+        reader.read_exact(&mut profile_buf).ok()?;
+        Some(profile_buf[0])
     }
 }
