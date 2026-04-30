@@ -23,3 +23,11 @@ rand_core = { version = "0.10", default-features = false }
 rand_core_06 = { package = "rand_core", version = "0.6" }
 crossterm = "0.29.0"
 color-eyre = "0.6.5"
+arboard = "3.6.1"
+ureq = { version = "2", features = ["json"] }
+pqcrypto-kyber = "0.8"
+pqcrypto-traits = "0.3"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+serde_json = "1"
+serde_bytes = "0.11"
