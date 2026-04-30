@@ -29,8 +29,8 @@ impl Vault {
     }
 
     pub fn get_profile_id(path: &str) -> vault::SecurityProfile {
-        let id_u8 = storage::BiceFile::get_profile_id(path);
-        vault::SecurityProfile::from_u8(id_u8).unwrap()
+        let id_u8 = storage::BiceFile::get_profile_id(path).unwrap_or(0);
+        vault::SecurityProfile::from_u8(id_u8).unwrap_or(vault::SecurityProfile::Standard)
     }
 
     pub fn load_from_disk(path: &str, master_pass: [u8;32]) -> Result<Self, String> {
