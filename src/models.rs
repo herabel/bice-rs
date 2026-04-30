@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::{storage::{self, BiceFile}, vault::{self}};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct PasswordEntry {
     pub service: String,
     pub login: String,
@@ -14,6 +14,12 @@ pub struct Vault {
     pub entries: Vec<PasswordEntry>,
 }
 
+impl PartialEq for Vault{
+    fn eq(&self, other: &Self) -> bool {
+        self.entries == other.entries
+    }
+}
+
 impl Vault { 
     pub fn new() -> Self {
         Self {entries: Vec::new()}
@@ -23,26 +29,21 @@ impl Vault {
     }
 
     pub fn get_profile_id(path: &str) -> vault::SecurityProfile {
-        let id_u8 = storage::BiceFile::get_profile_id(path);
-        vault::SecurityProfile::from_u8(id_u8).unwrap()
+        let id_u8 = storage::BiceFile::get_profile_id(path).unwrap_or(0);
+        vault::SecurityProfile::from_u8(id_u8).unwrap_or(vault::SecurityProfile::Standard)
     }
 
-    pub fn load_from_disk(path: &str, master_pass: &str) -> Result<Self, String> {
+    pub fn load_from_disk(path: &str, master_pass: [u8;32]) -> Result<Self, String> {
         let bice = BiceFile::open(path).map_err(|e| e.to_string())?;
         let decrypted_data = bice.decrypt(master_pass)?;
         let vault: Vault = postcard::from_bytes(&decrypted_data).map_err(|e| format!("Ошибка структуры данных {e}!"))?;
         Ok(vault)
     }
 
-    pub fn save_to_disk(&self, path: &str, master_pass: &str, profile: crate::vault::SecurityProfile) -> Result<(), String> {
+    pub fn save_to_disk(&self, path: &str, master_pass: &[u8;32], profile: crate::vault::SecurityProfile, salt: [u8;64]) -> Result<(), String> {
         let bytes = postcard::to_stdvec(self).map_err(|e| e.to_string())?;
-
-        let new_salt = crate::entropy::generate_random_bytes(64);
-
-        let bice = BiceFile::encrypt_new(&bytes, master_pass, &new_salt, profile)?;
-
+        let bice = BiceFile::encrypt_new(&bytes, *master_pass, &salt, profile)?;
         bice.save(path).map_err(|e| e.to_string())?;
-
         Ok(())
     }
 }

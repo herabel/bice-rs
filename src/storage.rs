@@ -1,5 +1,4 @@
-use std::time::Instant;
-use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Write}};
+use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Seek, Write}};
 
 use crate::{vault::{self, SecurityProfile}};
 
@@ -8,7 +7,7 @@ use crate::{vault::{self, SecurityProfile}};
 pub struct BiceFile{
     pub header: [u8;4],
     pub version: u8,
-    profile_id: u8,
+    pub profile_id: u8,
     pub salt: [u8;64],
     pub data: Vec<u8>
 }
@@ -21,17 +20,13 @@ impl BiceFile{
     /// 3. Упаковка всего этого в структуру.
     pub fn encrypt_new(
         raw_data: &[u8], 
-        password: &str, 
+        password: [u8;32], 
         salt: &[u8],
         profile: vault::SecurityProfile
     ) -> Result<Self,String>
     {
-        let start_vault = Instant::now();
-        let master_key = vault::get_master_key(password, &salt.to_vec(), profile).map_err(|e| format!("Ошибка Argon2id: {e}"))?;
-        let duration_vault = start_vault.elapsed();
-        println!("[PERF] : Argon2id выполнен за: {:?}", duration_vault);
 
-        let encrypted_bytes = crate::encryption::encrypt(raw_data, &master_key)?;
+        let encrypted_bytes = crate::encryption::encrypt(raw_data, &password)?;
 
         let mut salt_array = [0u8; 64];
 
@@ -51,6 +46,18 @@ impl BiceFile{
             data: (encrypted_bytes)
         })
     }
+
+
+    pub fn get_salt_from_file(path: impl AsRef<std::path::Path>) -> std::io::Result<[u8;64]>{
+        let mut file = File::open(path)?;
+        let _ = file.seek(io::SeekFrom::Start(6));
+        let mut reader = BufReader::new(file);
+        let mut salt = [0u8;64];
+        reader.read_exact(&mut salt)?;
+        Ok(salt)
+    }
+
+
     /// Сохраняет текущий BiceFile по указанному пути.
     /// Логика:
     /// 1. Создать/Перезаписать файл.
@@ -122,61 +129,17 @@ impl BiceFile{
     /// Дешифрует переданную базу данных
     /// 1. Берёт соль из файла
     /// 2. Возвращает дешифрованные данные
-    pub fn decrypt(&self, password: &str) -> Result<Vec<u8>, String> {
-        let profile = SecurityProfile::from_u8(self.profile_id).unwrap();
-        // 1. Восстанавливаем ключ, используя СОЛЬ ИЗ ФАЙЛА (self.salt)
-        let master_key = crate::vault::get_master_key(password, &self.salt.to_vec(), profile)?;
-        
-        // 2. Расшифровываем
-        crate::encryption::decrypt(&self.data, &master_key)
+    pub fn decrypt(&self, password: [u8;32]) -> Result<Vec<u8>, String> {
+        crate::encryption::decrypt(&self.data, &password)
     }
 
-    pub fn get_profile_id(path: impl AsRef<std::path::Path>) -> u8 {
-        let file = File::open(path).unwrap();
+    pub fn get_profile_id(path: impl AsRef<std::path::Path>) -> Option<u8> {
+        let file = File::open(path).ok()?;
         let mut reader = BufReader::new(file);
 
-        reader.seek_relative(5).unwrap();
+        reader.seek_relative(5).ok()?;
         let mut profile_buf = [0u8;1];
-        reader.read_exact(&mut profile_buf).unwrap();
-        profile_buf[0]
+        reader.read_exact(&mut profile_buf).ok()?;
+        Some(profile_buf[0])
     }
 }
-
-// deprecated
-
-/*
-#[allow(unused)]
-pub fn create_bice (path: &str, salt: &Vec<u8>) -> std::io::Result<()> {
-    let mut file = OpenOptions::new().create(true).read(true).write(true).open(path).expect("[ERROR] Создание файла (create_bice) неудачно.");
-    file.write_all(b"B1CE")?;
-    file.write_all(&[1u8])?;
-    file.write_all(salt)?;
-    Ok(())
-}
-
-pub fn save_password_bice(path: &str, password_hashed: &[u8]) -> std::io::Result<()>{
-    let mut file = OpenOptions::new().read(true).write(true).open(path).expect("[ERROR] Не удалось сохранить BICE!");
-    let _ = file.write_all(&password_hashed);
-    file.write(b"0909")?;
-    Ok(())
-}
-
-
-pub fn read_bice(path: &str) -> Result<BiceFile, String> {
-    let file = File::open(path).map_err(|e| format!("[ERROR] Ошибка открытия файла: {}", e))?;
-    let mut buf_reader = BufReader::new(file);
-    let mut magic_bytes= [0u8; 4]; // 4 байта
-    buf_reader.read_exact(&mut magic_bytes).map_err(|e| e.to_string())?;
-    if &magic_bytes != b"B1CE" {
-        return Err("[ERROR] Неверный формат файла: отсутствует сигнатура B1CE".to_string());
-    }
-    let mut version = [0u8; 1];
-    buf_reader.read_exact(&mut version).map_err(|e| e.to_string())?;
-    let mut salt = [0u8; 64];
-    buf_reader.read_exact(&mut salt).map_err(|e| e.to_string())?;
-    let mut encrypted_data = Vec::new();
-    buf_reader.read_to_end(&mut encrypted_data).map_err(|e| e.to_string())?;
-
-    Ok(BiceFile {salt, data: encrypted_data, header: *b"B1CE", version: 1 })
-}
-*/

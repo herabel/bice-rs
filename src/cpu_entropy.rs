@@ -1,5 +1,5 @@
 #[cfg(any(target_arch = "x86_64"))]
-/// Тестовая функция для вывода rdseed и rdrand.
+// Тестовая функция для вывода rdseed и rdrand.
 pub fn get_entropy_from_cpu() {
     let Some(raw_value) = gen_rdseed(20) else {
         return;
