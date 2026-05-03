@@ -15,6 +15,7 @@ use crate::{
     tui::ui,
     vault::{SecurityProfile, get_master_key},
     sync::{self, ServerConfig, Session, SyncCommand, SyncResult, spawn_worker},
+    esp32,
 };
 
 #[derive(PartialEq)]
@@ -54,6 +55,13 @@ pub struct App {
     pub(crate) sync_res_rx: Option<std::sync::mpsc::Receiver<SyncResult>>,
     pub(crate) server_versions: Vec<i32>,
     pub(crate) versions_state: ratatui::widgets::ListState,
+    pub(crate) esp32_enabled: bool,
+    pub(crate) esp32_pubkey: Option<[u8; 32]>,
+    pub(crate) esp32_status: String,
+    pub(crate) esp32_rx: Option<std::sync::mpsc::Receiver<Result<esp32::Esp32Response, String>>>,
+    pub(crate) esp32_pending_key: Option<[u8; 32]>,
+    pub(crate) esp32_pending_bice: Option<BiceFile>,
+    pub(crate) esp32_operation: Esp32Operation,
 }
 
 #[derive(PartialEq)]
@@ -62,6 +70,15 @@ pub enum AddField {
     Login,
     Password,
     Note,
+}
+
+#[derive(PartialEq, Clone, Copy)]
+pub enum Esp32Operation {
+    None,
+    Decrypt,
+    NewDb,
+    Attach,
+    Detach,
 }
 
 impl Debug for Screen {
@@ -80,6 +97,8 @@ impl Debug for Screen {
             Self::ServerRegister => write!(f, "ServerRegister"),
             Self::ServerSettings => write!(f, "ServerSettings"),
             Self::ServerVersions => write!(f, "ServerVersions"),
+            Self::Esp32Setup => write!(f, "Esp32Setup"),
+            Self::Esp32Auth => write!(f, "Esp32Auth"),
         }
     }
 }
@@ -106,6 +125,8 @@ impl Clone for Screen {
             Self::ServerRegister => Self::ServerRegister,
             Self::ServerSettings => Self::ServerSettings,
             Self::ServerVersions => Self::ServerVersions,
+            Self::Esp32Setup => Self::Esp32Setup,
+            Self::Esp32Auth => Self::Esp32Auth,
         }
     }
 }
@@ -190,6 +211,8 @@ impl App {
             Screen::ServerLogin | Screen::ServerRegister => ui::render_server_auth(frame, chunks[1], self),
             Screen::ServerSettings => ui::render_server_settings(frame, chunks[1], self),
             Screen::ServerVersions => ui::render_server_versions(frame, chunks[1], self),
+            Screen::Esp32Setup => ui::render_esp32_setup(frame, chunks[1], self),
+            Screen::Esp32Auth => ui::render_esp32_auth(frame, chunks[1], self),
         }
         frame.render_widget(header, chunks[0]); // header
         frame.render_widget(footer, footer_chunks[1]); // footer buttons
@@ -269,6 +292,21 @@ impl App {
                 }
             }
         }
+        if let Some(rx) = &self.esp32_rx {
+            if let std::result::Result::Ok(result) = rx.try_recv() {
+                self.esp32_rx = None;
+                match result {
+                    std::result::Result::Ok(response) => {
+                        self.handle_esp32_response(response);
+                    }
+                    Err(e) => {
+                        self.esp32_status = format!("Error: {}", e);
+                        self.esp32_pending_key = None;
+                        self.esp32_pending_bice = None;
+                    }
+                }
+            }
+        }
 
         Ok(())
     }
@@ -340,8 +378,33 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                     self.current_screen = Screen::Profiles;
                 }
             }
+            KeyCode::Char('e') => {
+                if self.current_screen == Screen::Auth {
+                    self.esp32_enabled = !self.esp32_enabled;
+                } else if self.current_screen == Screen::Dashboard {
+                    self.previous_screen = self.current_screen;
+                    self.esp32_status = if self.esp32_pubkey.is_some() {
+                        "ESP32: Enabled".to_string()
+                    } else {
+                        "ESP32: Not configured".to_string()
+                    };
+                    self.current_screen = Screen::Esp32Setup;
+                }
+            }
+            KeyCode::Char('a') => {
+                if self.current_screen == Screen::Esp32Setup && self.esp32_pubkey.is_none() {
+                    self.esp32_operation = Esp32Operation::Attach;
+                    self.start_esp32_auth();
+                }
+            }
             KeyCode::Backspace => {
-                if self.current_screen != Screen::Auth {
+                if self.current_screen == Screen::Esp32Auth {
+                    self.esp32_rx = None;
+                    self.esp32_pending_key = None;
+                    self.esp32_pending_bice = None;
+                    self.esp32_operation = Esp32Operation::None;
+                    self.current_screen = Screen::Auth;
+                } else if self.current_screen != Screen::Auth {
                     self.drop_input();
                     self.current_screen = self.previous_screen;
                 }
@@ -390,6 +453,9 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                     self.server_status.clear();
                     self.current_screen = Screen::ServerRegister;
                     self.input_mode = InputMode::Editing;
+                } else if self.current_screen == Screen::Esp32Setup && self.esp32_pubkey.is_some() {
+                    self.esp32_operation = Esp32Operation::Detach;
+                    self.start_esp32_auth();
                 }
             }
             KeyCode::Char('u') => {
@@ -662,7 +728,7 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                         self.server_status = "Registering...".to_string();
                     }
                 }
-                Screen::Dashboard | Screen::Handshake | Screen::Error | Screen::Generator | Screen::Profiles | Screen::Loading | Screen::Sync | Screen::ServerVersions => {}
+                Screen::Dashboard | Screen::Handshake | Screen::Error | Screen::Generator | Screen::Profiles | Screen::Loading | Screen::Sync | Screen::ServerVersions | Screen::Esp32Setup | Screen::Esp32Auth => {}
             },
             _ => (),
         }
@@ -673,12 +739,23 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
             let bice = BiceFile::open(&self.file_path).ok()?;
             let file_profile = SecurityProfile::from_u8(bice.profile_id)?;
             self.current_profile = file_profile;
+            self.salt = Some(bice.salt);
             let key = get_master_key(&self.input.trim(), &bice.salt, file_profile).ok()?;
+
+            if bice.requires_esp32() {
+                self.esp32_pending_key = Some(key);
+                self.esp32_pending_bice = Some(bice);
+                self.esp32_operation = Esp32Operation::Decrypt;
+                self.drop_input();
+                self.input_mode = InputMode::Normal;
+                self.start_esp32_auth();
+                return None;
+            }
+
             self.password_hash = Some(key);
             match bice.decrypt(key) {
                 std::result::Result::Ok(decrypted_data) => {
                     let vault: Vault = postcard::from_bytes(&decrypted_data).ok()?;
-                    self.salt = BiceFile::get_salt_from_file(self.file_path.clone()).ok();
                     Some(vault)
                 }
 
@@ -690,9 +767,19 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
         } else {
             self.salt = Some(generate_random_bytes(64).try_into().ok()?);
             if let Some(salt) = self.salt {
+                let key = get_master_key(&self.input, &salt, self.current_profile).ok()?;
+
+                if self.esp32_enabled {
+                    self.esp32_pending_key = Some(key);
+                    self.esp32_operation = Esp32Operation::NewDb;
+                    self.drop_input();
+                    self.input_mode = InputMode::Normal;
+                    self.start_esp32_auth();
+                    return None;
+                }
+
                 self.logs.push("[VAULT] | Created a new vault".to_owned());
-                self.password_hash =
-                    Some(get_master_key(&self.input, &salt, self.current_profile).unwrap());
+                self.password_hash = Some(key);
                 Some(Vault::new())
             } else {
                 None
@@ -704,12 +791,15 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
         if let Some(ref vault) = self.vault {
             if let Some(ref password_hash) = self.password_hash {
                 if let Some(ref salt) = self.salt {
+                    let flags = if self.esp32_pubkey.is_some() { 1u8 } else { 0u8 };
                     let _ = models::Vault::save_to_disk(
                         &vault,
                         &self.file_path,
                         &password_hash,
                         self.current_profile,
                         *salt,
+                        flags,
+                        self.esp32_pubkey,
                     );
                     let _ = &self.logs.push("[SAVE] | Saving DB".to_owned());
                     return true;
@@ -773,7 +863,110 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
             sync_res_rx: Some(res_rx),
             server_versions: Vec::new(),
             versions_state: ratatui::widgets::ListState::default(),
+            esp32_enabled: false,
+            esp32_pubkey: None,
+            esp32_status: String::new(),
+            esp32_rx: None,
+            esp32_pending_key: None,
+            esp32_pending_bice: None,
+            esp32_operation: Esp32Operation::None,
         }
+    }
+
+    fn start_esp32_auth(&mut self) {
+        self.current_screen = Screen::Esp32Auth;
+        self.esp32_status = "Searching for ESP32...".to_string();
+
+        let salt = self.salt.unwrap_or([0u8; 64]);
+        let challenge = esp32::derive_challenge(&salt);
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        self.esp32_rx = Some(rx);
+
+        std::thread::spawn(move || {
+            let result = esp32::find_and_sign(&challenge);
+            let _ = tx.send(result);
+        });
+
+        self.esp32_status = "Press button on ESP32...".to_string();
+    }
+
+    fn handle_esp32_response(&mut self, response: esp32::Esp32Response) {
+        let factor = esp32::derive_factor(&response.signature);
+
+        match self.esp32_operation {
+            Esp32Operation::Decrypt => {
+                if let Some(mut base_key) = self.esp32_pending_key.take() {
+                    for i in 0..32 {
+                        base_key[i] ^= factor[i];
+                    }
+                    let final_key = base_key;
+                    self.password_hash = Some(final_key);
+                    self.esp32_pubkey = Some(response.pubkey);
+
+                    if let Some(bice) = self.esp32_pending_bice.take() {
+                        self.salt = Some(bice.salt);
+                        match bice.decrypt(final_key) {
+                            std::result::Result::Ok(decrypted_data) => {
+                                match postcard::from_bytes(&decrypted_data) {
+                                    std::result::Result::Ok(vault) => {
+                                        self.vault = Some(vault);
+                                        self.current_screen = Screen::Dashboard;
+                                    }
+                                    Err(_) => {
+                                        self.esp32_status = "Data corruption".to_string();
+                                    }
+                                }
+                            }
+                            Err(_) => {
+                                self.esp32_status = "Wrong password or ESP32 mismatch".to_string();
+                            }
+                        }
+                    }
+                }
+            }
+            Esp32Operation::NewDb => {
+                if let Some(mut base_key) = self.esp32_pending_key.take() {
+                    for i in 0..32 {
+                        base_key[i] ^= factor[i];
+                    }
+                    self.password_hash = Some(base_key);
+                    self.esp32_pubkey = Some(response.pubkey);
+                    self.esp32_enabled = true;
+                    self.logs.push("[VAULT] | Created a new vault with ESP32".to_owned());
+                    self.vault = Some(Vault::new());
+                    self.current_screen = Screen::Dashboard;
+                }
+            }
+            Esp32Operation::Attach => {
+                if let Some(mut current_key) = self.password_hash {
+                    for i in 0..32 {
+                        current_key[i] ^= factor[i];
+                    }
+                    self.password_hash = Some(current_key);
+                    self.esp32_pubkey = Some(response.pubkey);
+                    self.esp32_enabled = true;
+                    self.try_save();
+                    self.esp32_status = "ESP32 attached successfully".to_string();
+                    self.current_screen = Screen::Esp32Setup;
+                }
+            }
+            Esp32Operation::Detach => {
+                if let Some(mut current_key) = self.password_hash {
+                    for i in 0..32 {
+                        current_key[i] ^= factor[i];
+                    }
+                    self.password_hash = Some(current_key);
+                    self.esp32_pubkey = None;
+                    self.esp32_enabled = false;
+                    self.try_save();
+                    self.esp32_status = "ESP32 removed successfully".to_string();
+                    self.current_screen = Screen::Esp32Setup;
+                }
+            }
+            Esp32Operation::None => {}
+        }
+        self.esp32_operation = Esp32Operation::None;
     }
 }
 
@@ -802,19 +995,23 @@ pub enum Screen {
     ServerRegister,
     ServerSettings,
     ServerVersions,
+    Esp32Setup,
+    Esp32Auth,
 }
 
 impl Screen {
     fn footer_hints(&self) -> &str {
         match self {
-            Screen::Auth => "[Enter] Login [p] Profiles [q] Quit",
-            Screen::Dashboard => "[↑/↓] Select [Enter] Copy [g] Gen [n] New [s] Sync [q] Quit",
+            Screen::Auth => "[Enter] Login [p] Profiles [e] ESP32 [q] Quit",
+            Screen::Dashboard => "[↑/↓] Select [Enter] Copy [g] Gen [n] New [s] Sync [e] ESP32 [q] Quit",
             Screen::Generator => "[Space] Regen [1-4] Params [+/-] Len [c] Copy [Backspace] Back",
             Screen::Add => "[Enter] Save [Esc] Cancel",
             Screen::Profiles => "[1-4] Select Profile [Backspace] Back",
             Screen::Sync => "[l] Login [r] Register [u] Push [d] Pull [c] Change Server [Backspace] Back",
             Screen::ServerLogin | Screen::ServerRegister => "[Enter] Submit [Tab] Next Field [Esc] Cancel",
             Screen::ServerSettings => "[Enter] Save [Esc] Cancel",
+            Screen::Esp32Setup => "[a] Attach [r] Remove [Backspace] Back",
+            Screen::Esp32Auth => "Waiting for ESP32...",
             _ => "[q] Quit [Backspace] Back",
         }
     }
