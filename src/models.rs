@@ -40,9 +40,17 @@ impl Vault {
         Ok(vault)
     }
 
-    pub fn save_to_disk(&self, path: &str, master_pass: &[u8;32], profile: crate::vault::SecurityProfile, salt: [u8;64]) -> Result<(), String> {
+    pub fn save_to_disk(
+        &self,
+        path: &str,
+        master_pass: &[u8;32],
+        profile: crate::vault::SecurityProfile,
+        salt: [u8;64],
+        flags: u8,
+        esp32_pubkey: Option<[u8;32]>,
+    ) -> Result<(), String> {
         let bytes = postcard::to_stdvec(self).map_err(|e| e.to_string())?;
-        let bice = BiceFile::encrypt_new(&bytes, *master_pass, &salt, profile)?;
+        let bice = BiceFile::encrypt_new(&bytes, *master_pass, &salt, profile, flags, esp32_pubkey)?;
         bice.save(path).map_err(|e| e.to_string())?;
         Ok(())
     }

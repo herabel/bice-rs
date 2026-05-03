@@ -30,11 +30,13 @@ impl PasswordGenerator {
 
 pub fn render_auth(frame: &mut Frame, rect: Rect, app: &App) {
     let vault_status: bool = app.vault != None;
+    let esp32_label = if app.esp32_enabled { "ON" } else { "OFF" };
     let info_text = format!(
-        "Mode: {:?}\nInput: [   {}   ]\n\nСтатус Vault: [{}]",
+        "Mode: {:?}\nInput: [   {}   ]\n\nVault: [{}]\nESP32 2FA: [{}]",
         app.input_mode,
         app.input.clone(),
-        vault_status
+        vault_status,
+        esp32_label
     );
     let block = Block::default()
         .title(" Auth ")
@@ -473,4 +475,50 @@ pub fn render_server_versions(frame: &mut Frame, rect: Rect, app: &App) {
     
     let mut state = app.versions_state.clone();
     frame.render_stateful_widget(list, center_x[1], &mut state);
+}
+
+pub fn render_esp32_setup(frame: &mut Frame, rect: Rect, app: &App) {
+    let pubkey_text = if let Some(ref pk) = app.esp32_pubkey {
+        format!("Public Key: {:02x}{:02x}{:02x}{:02x}...{:02x}{:02x}{:02x}{:02x}",
+            pk[0], pk[1], pk[2], pk[3], pk[28], pk[29], pk[30], pk[31])
+    } else {
+        "No ESP32 attached".to_string()
+    };
+
+    let info_text = format!(
+        "ESP32 Hardware 2FA\n\n{}\n\nStatus: {}",
+        pubkey_text,
+        app.esp32_status
+    );
+
+    let block = Block::default()
+        .title(" ESP32 Setup ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Rgb(139, 232, 203)))
+        .bg(Color::Rgb(48, 54, 51));
+    let placeholder = Paragraph::new(info_text)
+        .fg(Color::Rgb(134, 168, 142))
+        .block(block)
+        .centered();
+
+    frame.render_widget(placeholder, rect);
+}
+
+pub fn render_esp32_auth(frame: &mut Frame, rect: Rect, app: &App) {
+    let info_text = format!(
+        "ESP32 Authentication\n\n{}\n\n[Backspace] Cancel",
+        app.esp32_status
+    );
+
+    let block = Block::default()
+        .title(" ESP32 2FA ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Rgb(156, 122, 151)))
+        .bg(Color::Rgb(48, 54, 51));
+    let placeholder = Paragraph::new(info_text)
+        .fg(Color::Rgb(139, 232, 203))
+        .block(block)
+        .centered();
+
+    frame.render_widget(placeholder, rect);
 }

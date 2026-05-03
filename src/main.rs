@@ -7,6 +7,7 @@ mod models;
 pub mod cpu_entropy;
 pub mod tui;
 pub mod sync;
+pub mod esp32;
 
 fn main() {
 
