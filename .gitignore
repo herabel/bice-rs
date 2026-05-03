@@ -1,6 +1,7 @@
 /target/
 /debug/
 /release/
+/src/bin/*
 
 *.bice
 
