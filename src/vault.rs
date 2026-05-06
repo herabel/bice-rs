@@ -2,6 +2,7 @@ use argon2::{self, Argon2, Params};
 #[allow(unused)]
 #[derive(Clone, Copy, Debug)]
 #[repr(u8)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum SecurityProfile {
     Fast = 1,
     Standard = 2,
