@@ -99,6 +99,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
+name = "arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+dependencies = [
+ "derive_arbitrary",
+]
+
+[[package]]
 name = "arboard"
 version = "3.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -180,6 +189,42 @@ name = "base64ct"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d809780667f4410e7c41b07f52439b94d2bdf8528eeedc287fa38d3b7f95d82"
+
+[[package]]
+name = "bice_rs"
+version = "0.1.0"
+dependencies = [
+ "arbitrary",
+ "arboard",
+ "argon2",
+ "chacha20poly1305",
+ "clap",
+ "color-eyre",
+ "crossterm",
+ "crypto",
+ "ed25519-dalek",
+ "getrandom 0.3.4",
+ "hex",
+ "postcard",
+ "pqcrypto-kyber",
+ "pqcrypto-traits",
+ "rand_chacha",
+ "rand_core 0.10.1",
+ "rand_core 0.6.4",
+ "ratatui",
+ "secrecy",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "serialport",
+ "sysinfo",
+ "thiserror 2.0.18",
+ "tiny-keccak",
+ "ureq",
+ "uuid",
+ "x25519-dalek",
+ "zeroize",
+]
 
 [[package]]
 name = "bit-set"
@@ -625,6 +670,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ececcb659e7ba858fb4f10388c250a7252eb0a27373f1a72b8748afdd248e587"
 dependencies = [
  "powerfmt",
+]
+
+[[package]]
+name = "derive_arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -1332,41 +1388,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "main"
-version = "0.1.0"
-dependencies = [
- "arboard",
- "argon2",
- "chacha20poly1305",
- "clap",
- "color-eyre",
- "crossterm",
- "crypto",
- "ed25519-dalek",
- "getrandom 0.3.4",
- "hex",
- "postcard",
- "pqcrypto-kyber",
- "pqcrypto-traits",
- "rand_chacha",
- "rand_core 0.10.1",
- "rand_core 0.6.4",
- "ratatui",
- "secrecy",
- "serde",
- "serde_bytes",
- "serde_json",
- "serialport",
- "sysinfo",
- "thiserror 2.0.18",
- "tiny-keccak",
- "ureq",
- "uuid",
- "x25519-dalek",
- "zeroize",
 ]
 
 [[package]]
