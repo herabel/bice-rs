@@ -1,6 +1,8 @@
 bice-rs client app 
 
-bice-rs is a password manager project that implements powerful cryotography algorithms to protect your passwords
+bice-rs is a password manager project that implements powerful cryotography algorithms to protect your passwords.
+
+there's also a [bice-rs-server](https://github.com/herabel/bice-rs-server) (License: **AGPL-3.0**) for self-hosted passwords sync.
 
 for now, readme is dull</br>
 
