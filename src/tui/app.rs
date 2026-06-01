@@ -816,7 +816,7 @@ fn handle_normal_events(&mut self, key: KeyEvent) {
             list_state: (ListState::default()),
             table_state: (TableState::default().with_selected(Some(0))),
             current_screen: (Screen::Auth),
-            should_quit: (false),
+            should_quit: false,
             input_mode: (InputMode::Normal),
             previous_screen: Screen::Auth,
             file_path,
