@@ -4,6 +4,7 @@
 /src/bin/*
 /fuzz/
 .vscode/
+.idea/
 
 *.bice
 *.log
