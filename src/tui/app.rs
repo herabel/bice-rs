@@ -397,7 +397,8 @@ fn handle_normal_events(&mut self, key: KeyEvent) {
             KeyCode::Char('c') => {
                 if self.current_screen == Screen::Generator && self.generator.password.is_some() {
                     if let Some(password) = &self.generator.password {
-                        if let Some(mut clipboard) = arboard::Clipboard::new().ok() {
+                        let clipboard_tuple = arboard::Clipboard::new().ok();
+                        if let Some(mut clipboard) = clipboard_tuple {
                             let _ = clipboard.set_text(password);
                         };
                     }
