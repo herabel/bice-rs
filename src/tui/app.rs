@@ -111,23 +111,7 @@ impl PartialEq for Screen {
 
 impl Clone for Screen {
     fn clone(&self) -> Self {
-        match self {
-            Self::Auth => Self::Auth,
-            Self::Dashboard => Self::Dashboard,
-            Self::Handshake => Self::Handshake,
-            Self::Error => Self::Error,
-            Self::Generator => Self::Generator,
-            Self::Add => Self::Add,
-            Self::Profiles => Self::Profiles,
-            Self::Loading => Self::Loading,
-            Self::Sync => Self::Sync,
-            Self::ServerLogin => Self::ServerLogin,
-            Self::ServerRegister => Self::ServerRegister,
-            Self::ServerSettings => Self::ServerSettings,
-            Self::ServerVersions => Self::ServerVersions,
-            Self::Esp32Setup => Self::Esp32Setup,
-            Self::Esp32Auth => Self::Esp32Auth,
-        }
+        *self
     }
 }
 
@@ -493,14 +477,11 @@ fn handle_normal_events(&mut self, key: KeyEvent) {
             }
             KeyCode::Enter => {
                 if self.current_screen == Screen::Dashboard {
-                    if let Some(vault) = &self.vault {
-                        if let Some(selected) = self.table_state.selected() {
-                            if let Some(entry) = vault.entries.get(selected) {
-                                if let Some(mut clipboard) = arboard::Clipboard::new().ok() {
                     if let Some(vault) = &self.vault
                         && let Some(selected) = self.table_state.selected()
                             && let Some(entry) = vault.entries.get(selected) {
                                 let clipboard_tuple = arboard::Clipboard::new().ok();
+                                if let Some(mut clipboard) = clipboard_tuple {
                                     let _ = clipboard.set_text(entry.password.clone());
                                 }
                             }
