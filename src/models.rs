@@ -22,6 +22,12 @@ impl PartialEq for Vault{
     }
 }
 
+impl Default for Vault {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Vault { 
     pub fn new() -> Self {
         Self {entries: Vec::new()}

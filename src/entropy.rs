@@ -22,6 +22,12 @@ pub struct HardwareEntropyPool{
     counter: usize,
 }
 
+impl Default for HardwareEntropyPool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HardwareEntropyPool {
     pub fn new() -> Self {
 

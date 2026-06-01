@@ -29,7 +29,7 @@ impl PasswordGenerator {
 }
 
 pub fn render_auth(frame: &mut Frame, rect: Rect, app: &App) {
-    let vault_status: bool = app.vault != None;
+    let vault_status: bool = app.vault.is_some();
     let esp32_label = if app.esp32_enabled { "ON" } else { "OFF" };
     let info_text = format!(
         "Mode: {:?}\nInput: [   {}   ]\n\nVault: [{}]\nESP32 2FA: [{}]",
@@ -141,7 +141,7 @@ pub fn render_dashboard(frame: &mut Frame, rect: Rect, app: &App) {
         )
         .highlight_symbol(">> ");
 
-        let mut table_state = app.table_state.clone();
+        let mut table_state = app.table_state;
         frame.render_stateful_widget(table, chunks[1], &mut table_state);
     }
 
@@ -473,7 +473,7 @@ pub fn render_server_versions(frame: &mut Frame, rect: Rect, app: &App) {
 
     frame.render_widget(Block::default().bg(bg_color), rect);
     
-    let mut state = app.versions_state.clone();
+    let mut state = app.versions_state;
     frame.render_stateful_widget(list, center_x[1], &mut state);
 }
 

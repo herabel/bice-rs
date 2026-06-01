@@ -54,6 +54,7 @@ impl BiceFile{
     }
 
     ///Additional function for fuzzing
+    #[allow(unused)]
     pub fn from_bytes(data: &[u8]) -> std::io::Result<Self> {
         let cursor = std::io::Cursor::new(data);
         let mut reader = std::io::BufReader::new(cursor);

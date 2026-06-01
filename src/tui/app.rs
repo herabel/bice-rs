@@ -142,6 +142,12 @@ impl Debug for InputMode {
     }
 }
 
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> color_eyre::Result<()> {
         while !self.should_quit {
@@ -221,18 +227,17 @@ impl App {
 
     fn handle_events(&mut self) -> color_eyre::Result<()> {
         let poll = event::poll(Duration::from_millis(16))?;
-        if poll {
-            if let Some(key) = event::read()?.as_key_press_event() {
+        if poll
+            && let Some(key) = event::read()?.as_key_press_event() {
                 if self.input_mode == InputMode::Normal {
                     self.handle_normal_events(key);
                 } else {
                     self.handle_editing_events(key);
                 }
             };
-        };
 
-        if let Some(rx) = &self.sync_res_rx {
-            if let std::result::Result::Ok(res) = rx.try_recv() {
+        if let Some(rx) = &self.sync_res_rx
+            && let std::result::Result::Ok(res) = rx.try_recv() {
                 match res {
                     SyncResult::LoginOk(session) => {
                         sync::save_session(&self.file_path, &session);
@@ -259,17 +264,14 @@ impl App {
                         
                         // Try to reload automatically
                         let mut success = false;
-                        if let Some(key) = self.password_hash {
-                            if let std::result::Result::Ok(bice) = BiceFile::open(&self.file_path) {
-                                if let std::result::Result::Ok(decrypted_data) = bice.decrypt(key) {
-                                    if let std::result::Result::Ok(vault) = postcard::from_bytes(&decrypted_data) {
+                        if let Some(key) = self.password_hash
+                            && let std::result::Result::Ok(bice) = BiceFile::open(&self.file_path)
+                                && let std::result::Result::Ok(decrypted_data) = bice.decrypt(key)
+                                    && let std::result::Result::Ok(vault) = postcard::from_bytes(&decrypted_data) {
                                         self.vault = Some(vault);
                                         self.salt = BiceFile::get_salt_from_file(self.file_path.clone()).ok();
                                         success = true;
                                     }
-                                }
-                            }
-                        }
                         
                         if !success {
                             self.server_status = "Pull ok, but failed to decrypt with current password. Please login again.".to_string();
@@ -291,9 +293,8 @@ impl App {
                     }
                 }
             }
-        }
-        if let Some(rx) = &self.esp32_rx {
-            if let std::result::Result::Ok(result) = rx.try_recv() {
+        if let Some(rx) = &self.esp32_rx
+            && let std::result::Result::Ok(result) = rx.try_recv() {
                 self.esp32_rx = None;
                 match result {
                     std::result::Result::Ok(response) => {
@@ -306,12 +307,11 @@ impl App {
                     }
                 }
             }
-        }
 
         Ok(())
     }
 
-fn handle_normal_events(&mut self, key: KeyEvent) -> () {
+fn handle_normal_events(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Char('q') => {
                 self.try_save();
@@ -411,7 +411,7 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
             }
             KeyCode::Char('i') => self.input_mode = InputMode::Editing,
             KeyCode::Char('c') => {
-                if self.current_screen == Screen::Generator && self.generator.password != None {
+                if self.current_screen == Screen::Generator && self.generator.password.is_some() {
                     if let Some(password) = &self.generator.password {
                         if let Some(mut clipboard) = arboard::Clipboard::new().ok() {
                             let _ = clipboard.set_text(password);
@@ -497,16 +497,18 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                         if let Some(selected) = self.table_state.selected() {
                             if let Some(entry) = vault.entries.get(selected) {
                                 if let Some(mut clipboard) = arboard::Clipboard::new().ok() {
+                    if let Some(vault) = &self.vault
+                        && let Some(selected) = self.table_state.selected()
+                            && let Some(entry) = vault.entries.get(selected) {
+                                let clipboard_tuple = arboard::Clipboard::new().ok();
                                     let _ = clipboard.set_text(entry.password.clone());
                                 }
                             }
-                        }
-                    }
-                } else if self.current_screen == Screen::ServerVersions {
-                    if let Some(selected) = self.versions_state.selected() {
-                        if let Some(&version) = self.server_versions.get(selected) {
-                            if let Some(session) = &self.server_session {
-                                if let Some(tx) = &self.sync_cmd_tx {
+                } else if self.current_screen == Screen::ServerVersions
+                    && let Some(selected) = self.versions_state.selected()
+                        && let Some(&version) = self.server_versions.get(selected)
+                            && let Some(session) = &self.server_session
+                                && let Some(tx) = &self.sync_cmd_tx {
                                     let _ = tx.send(sync::SyncCommand::Pull {
                                         config: self.server_config.clone(),
                                         session: session.clone(),
@@ -516,10 +518,6 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                                     self.server_status = format!("Pulling version {}...", version);
                                     self.current_screen = Screen::Sync;
                                 }
-                            }
-                        }
-                    }
-                }
             }
             KeyCode::Tab | KeyCode::Down => {
                 if self.current_screen == Screen::Add {
@@ -543,13 +541,11 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                         };
                         self.table_state.select(Some(i));
                     }
-                } else if self.current_screen == Screen::ServerVersions {
-                    if let Some(selected) = self.versions_state.selected() {
-                        if selected < self.server_versions.len().saturating_sub(1) {
+                } else if self.current_screen == Screen::ServerVersions
+                    && let Some(selected) = self.versions_state.selected()
+                        && selected < self.server_versions.len().saturating_sub(1) {
                             self.versions_state.select(Some(selected + 1));
                         }
-                    }
-                }
             }
             KeyCode::Up => {
                 if self.current_screen == Screen::Add {
@@ -573,13 +569,11 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                         };
                         self.table_state.select(Some(i));
                     }
-                } else if self.current_screen == Screen::ServerVersions {
-                    if let Some(selected) = self.versions_state.selected() {
-                        if selected > 0 {
+                } else if self.current_screen == Screen::ServerVersions
+                    && let Some(selected) = self.versions_state.selected()
+                        && selected > 0 {
                             self.versions_state.select(Some(selected - 1));
                         }
-                    }
-                }
             }
             _ => {}
         };
@@ -591,7 +585,7 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
 
 
     ///Keys handler in editing mode, depends on current screen
-    fn handle_editing_events(&mut self, key: KeyEvent) -> () {
+    fn handle_editing_events(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Char(c) => {
                 if self.current_screen == Screen::Add {
@@ -740,7 +734,7 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
             let file_profile = SecurityProfile::from_u8(bice.profile_id)?;
             self.current_profile = file_profile;
             self.salt = Some(bice.salt);
-            let key = get_master_key(&self.input.trim(), &bice.salt, file_profile).ok()?;
+            let key = get_master_key(self.input.trim(), &bice.salt, file_profile).ok()?;
 
             if bice.requires_esp32() {
                 self.esp32_pending_key = Some(key);
@@ -793,9 +787,9 @@ fn handle_normal_events(&mut self, key: KeyEvent) -> () {
                 if let Some(ref salt) = self.salt {
                     let flags = if self.esp32_pubkey.is_some() { 1u8 } else { 0u8 };
                     let _ = models::Vault::save_to_disk(
-                        &vault,
+                        vault,
                         &self.file_path,
-                        &password_hash,
+                        password_hash,
                         self.current_profile,
                         *salt,
                         flags,
