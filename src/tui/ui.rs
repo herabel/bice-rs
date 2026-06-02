@@ -205,7 +205,7 @@ pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
             Block::default()
                 .title(" Service ")
                 .borders(Borders::ALL)
-                .border_style(active_style)
+                .border_style(service_style)
                 .bg(bg_color),
         );
 
@@ -216,7 +216,7 @@ pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
             Block::default()
                 .title(" Login ")
                 .borders(Borders::ALL)
-                .border_style(inactive_style)
+                .border_style(login_style)
                 .bg(bg_color),
         );
 
@@ -227,7 +227,7 @@ pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
             Block::default()
                 .title(" Password ")
                 .borders(Borders::ALL)
-                .border_style(inactive_style)
+                .border_style(password_style)
                 .bg(bg_color),
         );
 
@@ -238,7 +238,7 @@ pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
             Block::default()
                 .title(" Note ")
                 .borders(Borders::ALL)
-                .border_style(inactive_style)
+                .border_style(note_style)
                 .bg(bg_color),
         );
 
