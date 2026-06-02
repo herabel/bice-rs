@@ -53,6 +53,60 @@ impl BiceFile{
         })
     }
 
+    ///Additional function for fuzzing
+    #[allow(unused)]
+    pub fn from_bytes(data: &[u8]) -> std::io::Result<Self> {
+        let cursor = std::io::Cursor::new(data);
+        let mut reader = std::io::BufReader::new(cursor);
+
+        let mut header = [0u8; 4];
+        reader.read_exact(&mut header)?;
+        if &header != b"B1CE" {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "[FS] : отсутствует сигнатура B1CE"));
+        }
+
+        let mut version_buf = [0u8; 1];
+        reader.read_exact(&mut version_buf)?;
+        let version = version_buf[0];
+
+        let mut profile_buf = [0u8; 1];
+        reader.read_exact(&mut profile_buf)?;
+        let profile_id = profile_buf[0];
+
+        if SecurityProfile::from_u8(profile_id).is_none() {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "[FS] : Неизвестный профиль безопасности"));
+        }
+
+        let mut flags = 0u8;
+        if version >= 2 {
+            let mut flags_buf = [0u8; 1];
+            reader.read_exact(&mut flags_buf)?;
+            flags = flags_buf[0];
+        }
+
+        let mut salt = [0u8; 64];
+        reader.read_exact(&mut salt)?;
+
+        let mut esp32_pubkey = None;
+        if flags & 1 != 0 {
+            let mut pubkey = [0u8; 32];
+            reader.read_exact(&mut pubkey)?;
+            esp32_pubkey = Some(pubkey);
+        }
+
+        let mut data = Vec::new();
+        reader.read_to_end(&mut data)?;
+
+        Ok(Self {
+            header,
+            version,
+            profile_id,
+            flags,
+            salt,
+            esp32_pubkey,
+            data,
+        })
+    }
 
     pub fn get_salt_from_file(path: impl AsRef<std::path::Path>) -> std::io::Result<[u8;64]>{
         let mut file = File::open(&path)?;

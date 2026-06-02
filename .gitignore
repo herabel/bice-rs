@@ -2,9 +2,14 @@
 /debug/
 /release/
 /src/bin/*
+/fuzz/
+.vscode/
+.idea/
 
 *.bice
+*.log
 
-.vscode/
+dockerfile
+.dockerignore
 
 logs.txt

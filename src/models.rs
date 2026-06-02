@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 use crate::{storage::{self, BiceFile}, vault::{self}};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct PasswordEntry {
     pub service: String,
     pub login: String,
@@ -10,6 +11,7 @@ pub struct PasswordEntry {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Vault {
     pub entries: Vec<PasswordEntry>,
 }
@@ -17,6 +19,12 @@ pub struct Vault {
 impl PartialEq for Vault{
     fn eq(&self, other: &Self) -> bool {
         self.entries == other.entries
+    }
+}
+
+impl Default for Vault {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
