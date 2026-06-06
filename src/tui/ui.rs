@@ -29,6 +29,7 @@ impl PasswordGenerator {
 }
 
 pub fn render_auth(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let vault_status: bool = app.vault.is_some();
     let esp32_label = if app.esp32_enabled { "ON" } else { "OFF" };
     let info_text = format!(
@@ -52,6 +53,7 @@ pub fn render_auth(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_generator(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_generator(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let generator = &app.generator;
     let info_text: String;
     if let Some(password) = &generator.password {
@@ -92,6 +94,7 @@ pub fn render_generator(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_dashboard(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_dashboard(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([Constraint::Length(2), Constraint::Fill(1)])
@@ -161,6 +164,7 @@ pub fn render_dashboard(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_add(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
@@ -250,6 +254,7 @@ pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_profiles(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_profiles(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let info_text = format!(
         "Select Encryption Profile:\n\n\
         [1] Fast\n\
@@ -274,6 +279,7 @@ pub fn render_profiles(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_sync(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_sync(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let session_status = if let Some(session) = &app.server_session {
         format!("Logged in as: {}", session.user_id)
     } else {
@@ -301,6 +307,7 @@ pub fn render_sync(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_server_auth(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_server_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
@@ -373,6 +380,7 @@ pub fn render_server_auth(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_server_settings(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_server_settings(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
@@ -426,6 +434,7 @@ pub fn render_server_settings(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_server_versions(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_server_versions(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
@@ -455,7 +464,7 @@ pub fn render_server_versions(frame: &mut Frame, rect: Rect, app: &App) {
         .border_style(active_style)
         .bg(bg_color);
 
-    let items: Vec<ratatui::widgets::ListItem> = app
+    let items: Vec<ratatui::widgets::ListItem<'_>> = app
         .server_versions
         .iter()
         .map(|v| ratatui::widgets::ListItem::new(format!("Version: {}", v)))
@@ -478,6 +487,7 @@ pub fn render_server_versions(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_esp32_setup(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_esp32_setup(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let pubkey_text = if let Some(ref pk) = app.esp32_pubkey {
         format!("Public Key: {:02x}{:02x}{:02x}{:02x}...{:02x}{:02x}{:02x}{:02x}",
             pk[0], pk[1], pk[2], pk[3], pk[28], pk[29], pk[30], pk[31])
@@ -505,6 +515,7 @@ pub fn render_esp32_setup(frame: &mut Frame, rect: Rect, app: &App) {
 }
 
 pub fn render_esp32_auth(frame: &mut Frame, rect: Rect, app: &App) {
+pub fn render_esp32_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let info_text = format!(
         "ESP32 Authentication\n\n{}\n\n[Backspace] Cancel",
         app.esp32_status
