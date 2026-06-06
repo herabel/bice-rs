@@ -2,8 +2,6 @@ use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, Read, Seek, Write
 
 use crate::{vault::{self, SecurityProfile}};
 
-// TODO: Рефакторинг, модуль должен получать все данные для шифрования и работать по принципу чёрного ящика, чтобы разгрузить логику main.rs
-// main.rs не должен выступать оркестратором данных, это снижает поддержку и излишне усложняет код
 pub struct BiceFile{
     pub header: [u8;4],
     pub version: u8,
