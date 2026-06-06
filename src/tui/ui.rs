@@ -10,13 +10,19 @@ use crate::{
     tui::app::{AddField, App},
 };
 
+#[derive(Debug)]
+/// A structure for password generator
 pub struct PasswordGenerator {
+    /// Contains password itself
     pub password: Option<String>,
+    /// Contains params of password (uppercase, digits, specials, ascii)
     pub params: [bool; 4],
+    /// Contains password length
     pub length: usize,
 }
 
 impl PasswordGenerator {
+    /// Generates password using given parameters
     pub fn generate_password(&mut self) {
         self.password = Some(generate_password(
             self.length,
@@ -28,7 +34,7 @@ impl PasswordGenerator {
     }
 }
 
-pub fn render_auth(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the auth page ([`Screen::Auth`][crate::tui::app::Screen::Auth]) inside the provided `Rect`.
 pub fn render_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let vault_status: bool = app.vault.is_some();
     let esp32_label = if app.esp32_enabled { "ON" } else { "OFF" };
@@ -52,7 +58,7 @@ pub fn render_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(placeholder, rect);
 }
 
-pub fn render_generator(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the generator page ([`Screen::Generator`][crate::tui::app::Screen::Generator]) inside the provided `Rect`.
 pub fn render_generator(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let generator = &app.generator;
     let info_text: String;
@@ -93,7 +99,7 @@ pub fn render_generator(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(placeholder, rect);
 }
 
-pub fn render_dashboard(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the dashboard page ([`Screen::Dashboard`][crate::tui::app::Screen::Dashboard]) inside the provided `Rect`.
 pub fn render_dashboard(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
@@ -163,7 +169,7 @@ pub fn render_dashboard(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(placeholder, chunks[0]);
 }
 
-pub fn render_add(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the password add page ([`Screen::Add`][crate::tui::app::Screen::Add]) inside the provided `Rect`.
 pub fn render_add(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
@@ -253,7 +259,7 @@ pub fn render_add(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(note, chunks[3]);
 }
 
-pub fn render_profiles(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the encryption profiles page ([`Screen::Profiles`][crate::tui::app::Screen::Profiles]) inside the provided `Rect`.
 pub fn render_profiles(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let info_text = format!(
         "Select Encryption Profile:\n\n\
@@ -278,7 +284,7 @@ pub fn render_profiles(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(placeholder, rect);
 }
 
-pub fn render_sync(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the server sync page ([`Screen::Sync`][crate::tui::app::Screen::Sync]) inside the provided `Rect`.
 pub fn render_sync(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let session_status = if let Some(session) = &app.server_session {
         format!("Logged in as: {}", session.user_id)
@@ -306,7 +312,7 @@ pub fn render_sync(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(placeholder, rect);
 }
 
-pub fn render_server_auth(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the server auth page ([`Screen::ServerLogin`][crate::tui::app::Screen::ServerLogin]) inside the provided `Rect`.
 pub fn render_server_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
@@ -378,8 +384,7 @@ pub fn render_server_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(password, chunks[1]);
     frame.render_widget(status, chunks[2]);
 }
-
-pub fn render_server_settings(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the server settings page ([`Screen::ServerSettings`][crate::tui::app::Screen::ServerSettings]) inside the provided `Rect`.
 pub fn render_server_settings(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
@@ -433,7 +438,7 @@ pub fn render_server_settings(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(status, chunks[1]);
 }
 
-pub fn render_server_versions(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the version selection page ([`Screen::Esp32Auth`][crate::tui::app::Screen::Esp32Auth]) inside the provided `Rect`.
 pub fn render_server_versions(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let center_y = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
@@ -486,7 +491,7 @@ pub fn render_server_versions(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_stateful_widget(list, center_x[1], &mut state);
 }
 
-pub fn render_esp32_setup(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the esp32 setup page ([`Screen::Esp32Setup`][crate::tui::app::Screen::Esp32Setup]) inside the provided `Rect`.
 pub fn render_esp32_setup(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let pubkey_text = if let Some(ref pk) = app.esp32_pubkey {
         format!("Public Key: {:02x}{:02x}{:02x}{:02x}...{:02x}{:02x}{:02x}{:02x}",
@@ -514,7 +519,7 @@ pub fn render_esp32_setup(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     frame.render_widget(placeholder, rect);
 }
 
-pub fn render_esp32_auth(frame: &mut Frame, rect: Rect, app: &App) {
+/// Renders the esp32 auth page inside provided `Rect`.
 pub fn render_esp32_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
     let info_text = format!(
         "ESP32 Authentication\n\n{}\n\n[Backspace] Cancel",
