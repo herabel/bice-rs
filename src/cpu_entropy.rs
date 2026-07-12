@@ -1,11 +1,4 @@
-#[cfg(target_arch = "x86_64")]
-// Тестовая функция для вывода rdseed и rdrand.
-pub fn get_entropy_from_cpu() {
-    let Some(raw_value) = gen_rdseed(20) else {
-        return;
-    };
-    println!("{}",raw_value);
-}
+#![cfg(target_arch = "x86_64")]
 
 /// Loops to gather entropy from [`try_rdseed`]. Returns `None` if the attempt is blank.
 pub fn gen_rdseed(loop_amount: u16) -> Option<u64> {
