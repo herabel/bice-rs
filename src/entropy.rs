@@ -1,15 +1,15 @@
 //! Entropy generation source leveraging CPU hardware jitter/instructions.
 //! 
 //! This module provides a Deterministic Random Bit Generator (DRBG)
-//! backed by `cpu_entropy`.
+//! backed by [`cpu_entropy`].
 //! 
 //! ### Traits
-//! - Implements [rand_core::RngCore] (v0.6) for standard sampling.
-//! - Implements [rand_core::TryRng] (v0.10) for fallible entropy retrieval.
+//! - Implements [rand_core::RngCore](https://docs.rs/rand_core/0.6.4/rand_core/trait.RngCore.html) (v0.6) for standard sampling.
+//! - Implements [rand_core::TryRng](https://docs.rs/rand_core/0.10/rand_core/trait.TryRng.html) (v0.10) for fallible entropy retrieval.
 //! 
 //! ### Security note
 //! Uses direct CPU instructions. Ensure the target architecture supports
-//! the necessary features (`rdrand`, `rdseed` via `cpu_entropy`) before deployment.
+//! the necessary features (`rdrand`, `rdseed` via [`cpu_entropy`]) before deployment.
 
 use getrandom;
 use rand_core::TryRng;
