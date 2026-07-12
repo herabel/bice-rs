@@ -475,6 +475,10 @@ fn handle_normal_events(&mut self, key: KeyEvent) {
                         self.server_status = "Not logged in".to_string();
                     }
                 }
+                else if self.current_screen == Screen::Dashboard{
+                    let selected_item_id = self.table_state.selected().as_ref().cloned().unwrap_or(self.table_state.selected().unwrap());
+                    self.vault.as_mut().unwrap().entries.remove(selected_item_id);
+                };
             }
             KeyCode::Enter => {
                 if self.current_screen == Screen::Dashboard {
