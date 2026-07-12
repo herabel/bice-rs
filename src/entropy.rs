@@ -58,16 +58,16 @@ impl HardwareEntropyPool {
 }
 
 impl rand_core_06::RngCore for HardwareEntropyPool {
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let _ = rand_core::TryRng::try_fill_bytes(self, dest);
-    }
-
     fn next_u32(&mut self) -> u32 {
         self.try_next_u32().unwrap()
     }
 
     fn next_u64(&mut self) -> u64 {
         self.try_next_u64().unwrap()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        let _ = rand_core::TryRng::try_fill_bytes(self, dest);
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand_core_06::Error> {
