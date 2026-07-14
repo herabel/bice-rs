@@ -1,13 +1,6 @@
-#[cfg(target_arch = "x86_64")]
-// Тестовая функция для вывода rdseed и rdrand.
-pub fn get_entropy_from_cpu() {
-    let Some(raw_value) = gen_rdseed(20) else {
-        return;
-    };
-    println!("{}",raw_value);
-}
+#![cfg(target_arch = "x86_64")]
 
-/// Loop to gather entropy from "try_rdseed()". Returns None if attempt is blank
+/// Loops to gather entropy from [`try_rdseed`]. Returns `None` if the attempt is blank.
 pub fn gen_rdseed(loop_amount: u16) -> Option<u64> {
     for _ in 0..loop_amount {
         let attempt = try_rdseed();
@@ -19,7 +12,7 @@ pub fn gen_rdseed(loop_amount: u16) -> Option<u64> {
     None
 }
 
-/// Loop to gather entropy from "try_rdrand()". Returns None if blank
+/// Loops to gather entropy from [`try_rdrand`]. Returns `None` if the output is blank.
 pub fn gen_rdrand(loop_amount: u16) -> Option<u64> {
     for _ in 0..loop_amount {
         let attempt = try_rdrand();
@@ -31,7 +24,9 @@ pub fn gen_rdrand(loop_amount: u16) -> Option<u64> {
     None
 }
 
-/// Does a query to "rdseed" processor register and returns None if status == 0 or unsupported feature
+/// Queries the hardware `RDRAND` processor register.
+///
+/// Returns `None` if the operation status is 0 or the feature is unsupported by the CPU.
 pub fn try_rdseed() -> Option<u64> {
     if is_x86_feature_detected!("rdseed") {
         unsafe {
@@ -48,7 +43,9 @@ pub fn try_rdseed() -> Option<u64> {
     }
 }
 
-/// Does a query to "rdrand" processor register and returns None if status == 0 or unsupported feature
+/// Queries the hardware `RDSEED` processor register.
+///
+/// Returns `None` if the operation status is 0 or the feature is unsupported by the CPU.
 pub fn try_rdrand() -> Option<u64> {
     if is_x86_feature_detected!("rdrand") {
         unsafe {

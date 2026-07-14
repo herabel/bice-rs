@@ -1,0 +1,31 @@
+[package]
+name = "main-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1", optional = true, features = ["derive"] }
+postcard = { version = "1.1.3", features = ["use-std"] }
+
+[dependencies.bice_rs]
+path = ".."
+features = ["arbitrary"]
+
+[[bin]]
+name = "vault"
+path = "fuzz_targets/vault.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "storage"
+path = "fuzz_targets/storage.rs"
+test = false
+doc = false
+bench = false

@@ -1,15 +1,15 @@
 //! Entropy generation source leveraging CPU hardware jitter/instructions.
 //! 
 //! This module provides a Deterministic Random Bit Generator (DRBG)
-//! backed by `cpu_entropy`.
+//! backed by [`cpu_entropy`].
 //! 
 //! ### Traits
-//! - Implements [rand_core::RngCore] (v0.6) for standard sampling.
-//! - Implements [rand_core::TryRng] (v0.10) for fallible entropy retrieval.
+//! - Implements [rand_core::RngCore](https://docs.rs/rand_core/0.6.4/rand_core/trait.RngCore.html) (v0.6) for standard sampling.
+//! - Implements [rand_core::TryRng](https://docs.rs/rand_core/0.10/rand_core/trait.TryRng.html) (v0.10) for fallible entropy retrieval.
 //! 
 //! ### Security note
 //! Uses direct CPU instructions. Ensure the target architecture supports
-//! the necessary features (`rdrand`, `rdseed` via `cpu_entropy`) before deployment.
+//! the necessary features (`rdrand`, `rdseed` via [`cpu_entropy`]) before deployment.
 
 use getrandom;
 use rand_core::TryRng;
@@ -58,16 +58,16 @@ impl HardwareEntropyPool {
 }
 
 impl rand_core_06::RngCore for HardwareEntropyPool {
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let _ = rand_core::TryRng::try_fill_bytes(self, dest);
-    }
-
     fn next_u32(&mut self) -> u32 {
         self.try_next_u32().unwrap()
     }
 
     fn next_u64(&mut self) -> u64 {
         self.try_next_u64().unwrap()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        let _ = rand_core::TryRng::try_fill_bytes(self, dest);
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand_core_06::Error> {

@@ -2,14 +2,14 @@
 /debug/
 /release/
 /src/bin/*
-/fuzz/
 .vscode/
 .idea/
+/fuzz/target
+/fuzz/corpus
+/fuzz/artifacts
 
 *.bice
 *.log
-
-dockerfile
-.dockerignore
+*.json
 
 logs.txt
