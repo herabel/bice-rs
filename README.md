@@ -35,7 +35,7 @@ To build `bice-rs` locally, ensure you have the latest stable Rust toolchain ins
 
 ```bash
 # Clone the repository
-git clone [https://github.com/herabel/bice-rs.git](https://github.com/herabel/bice-rs.git)
+git clone https://github.com/herabel/bice-rs.git
 cd bice-rs
 
 # Compile and run in release mode
