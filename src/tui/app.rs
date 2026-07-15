@@ -983,7 +983,7 @@ impl Screen {
     fn footer_hints(&self) -> &str {
         match self {
             Screen::Auth => "[Enter] Login [p] Profiles [e] ESP32 [q] Quit",
-            Screen::Dashboard => "[↑/↓] Select [Enter] Copy [g] Gen [n] New [s] Sync [e] ESP32 [q] Quit",
+            Screen::Dashboard => "[↑/↓] Select [Enter] Copy [d] Delete entry [g] Gen [n] New [s] Sync [e] ESP32 [q] Quit",
             Screen::Generator => "[Space] Regen [1-4] Params [+/-] Len [c] Copy [Backspace] Back",
             Screen::Add => "[Enter] Save [Esc] Cancel",
             Screen::Profiles => "[1-4] Select Profile [Backspace] Back",
