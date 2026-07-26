@@ -487,7 +487,7 @@ fn handle_normal_events(&mut self, key: KeyEvent) {
                             && let Some(entry) = vault.entries.get(selected) {
                                 let clipboard_tuple = arboard::Clipboard::new().ok();
                                 if let Some(mut clipboard) = clipboard_tuple {
-                                    let _ = clipboard.set_text(entry.password.clone());
+                                    let _ = clipboard.set_text(entry.login.clone() + "    ->    " + &*entry.password.clone());
                                 }
                             }
                 } else if self.current_screen == Screen::ServerVersions

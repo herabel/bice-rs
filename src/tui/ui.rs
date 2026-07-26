@@ -36,14 +36,10 @@ impl PasswordGenerator {
 
 /// Renders the auth page ([`Screen::Auth`][crate::tui::app::Screen::Auth]) inside the provided `Rect`.
 pub fn render_auth(frame: &mut Frame<'_>, rect: Rect, app: &App) {
-    let vault_status: bool = app.vault.is_some();
-    let esp32_label = if app.esp32_enabled { "ON" } else { "OFF" };
     let info_text = format!(
-        "Mode: {:?}\nInput: [   {}   ]\n\nVault: [{}]\nESP32 2FA: [{}]",
+        "Mode: {:?}\nPassword: [   {}   ]\nPress `i` to input",
         app.input_mode,
-        app.input.clone(),
-        vault_status,
-        esp32_label
+        "*".repeat(app.input.len()),
     );
     let block = Block::default()
         .title(" Auth ")
