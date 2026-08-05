@@ -1,5 +1,7 @@
 # bice-rs client
 
+<img width="1157" height="507" alt="image" src="https://github.com/user-attachments/assets/426898d6-f27d-4059-8a7f-23162b29631d" />
+
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://opensource.org/licenses/AGPL-3.0)
 [![Rust](https://img.shields.io/badge/Language-Rust-orange.svg)](https://www.rust-lang.org/)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20|%20Windows-lightgrey.svg)]()
