@@ -10,25 +10,10 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  choose-runner:
-    runs-on: ubuntu-latest
-    outputs:
-      runner: ${{ steps.runner.outputs.runner }}
-
-    steps:
-    - id: runner
-      run: |
-        if [ "${{ github.actor }}" == "herabel" ]; then
-          echo "runner=self-hosted" >> "$GITHUB_OUTPUT"   
-        else
-         echo "runner=ubuntu-latest" >> "$GITHUB_OUTPUT"
-        fi
 
   build:
 
-    needs: choose-runner
-
-    runs-on: ${{ needs.choose-runner.outputs.runner }}
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
